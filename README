@@ -1,0 +1,16 @@
+Map256 Google App Engine code
+---
+
+Map256 is a basic web application to plot travel path and visualize history of Foursquare (and possibly other) geodata.
+
+All items needed (except for OAuth consumer keys / secrets) are contained in this repository.
+
+The LICENSE file indicates what this is distributed under (basically MIT-style "you're on your own").
+
+Recipe to recreate:
+
+1) Checkout a copy of this repo
+2) Create a Google App Engine account & target application
+3) Deploy this code to that GAE application
+...
+47) There is no step 47.

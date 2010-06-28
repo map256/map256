@@ -1,0 +1,31 @@
+Fixes in development:
+---
+- Convert Foursquare checkin_id and foursquare_id fields back over to string, per the API docs
+
+Features in development:
+---
+- Decouple authorization and callback from a direct Foursquare API call (basically, keep a small batch of requests at the ready)
+
+- Make an actual scoreboard page, now that the frontpage is a map
+
+- Add ability for users to sign in with Google Accounts
+
+- Add ability to verify / begin ownership of account access
+
+- Add ability to remove account & history
+
+- Revamp storage of statistics, it's not going to be very workable long term, but would be best done after GA user signup is in place
+
+- Add "-12 hours" privacy support
+
+- Add heat maps
+	- "Places I've been overall"
+	- "Places everyone has been overall"
+
+Possible features:
+---
+- Add Gowalla support
+- Add Twitter places support
+- Add Flickr geotagged photos support
+- Add "tweet my history" button
+- Add ability for a user to privately visualize their history

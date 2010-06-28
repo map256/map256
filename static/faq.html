@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	  <meta charset="utf-8" />
+    <title>map256: FAQ</title>
+    <link rel="stylesheet" href="/stylesheet.css" />
+	</head>
+	<body>
+		<h1><a href="/">map256</a>: FAQ</h1>
+
+		<p><strong>Q: What is map256?</strong></p>
+		<p>A: map256 is a tool to show where someone has been.  It gathers information from <a href="http://foursquare.com/">Foursquare</a> to figure this out, and then provides a variety of tools to visualize your travels, showing timelines, (and soon) heatmaps and more.</p>
+
+		<p><strong>Q: How do I use map256?</strong></p>
+		<p>A: Make sure you have a <a href="http://foursquare.com/">Foursquare</a> account, then <a href="/authorize">authorize map256</a> to access it.</p>
+
+		<p><strong>Q: I just checked in, why hasn't it shown up on my map yet?</strong></p>
+		<p>A: map256 looks at checkins every 5 minutes, to avoid overloading our data providers.  Wait a couple of minutes, and try again.</p>
+
+		<p><strong>Q: What about my privacy?</strong></p>
+		<p>A: For the moment, map256 should only be used if you're OK with your "checkin" information being available to the world immediately.  A feature coming soon will allow you to "obscure" the last 12-24 hours worth of checkins.</p>
+
+		<p><strong>Q: Are you going to "tweet" anything or otherwise bug my friends without my permission?</strong></p>
+		<p>A: Currently, no, map256 is a "read only" app.  In the future I might add the ability for people to configure announcement-style things, but I will set that to be "opt-in" for anyone that hasn't previously configured it.</p>
+
+		<p><strong>Q: I've signed up, but now I want to get rid of my history, what do I do?</strong></p>
+		<p>A: Send a quick email to <a href="mailto:service@map256.com">service@map256.com</a> with either your Twitter username or Foursquare ID# (or the map256 link to your profile), and I'll remove you from map256 as soon as possible.  (You should probably also remove map256's authorization over at Foursquare.)  A feature coming soon will allow you to self-service remove your history.</p>
+
+		<p><strong>Q: What's with the "www" on your domain?  Haven't you heard of <a href="http://no-www.org/">no-www</a>?</strong></p>
+		<p>A: I agree that a www subdomain is excessively annoying (and Google's URL redirection doubly so), but until naked domains are <a href="http://code.google.com/appengine/kb/general.html#naked_domain">officially supported under Google App Engine</a> (which I suspect will be a while), I'm stuck with the "www".</p>
+
+		<p><strong>Q: When are statistics calculated?</strong></p>
+		<p>A: Statistics are calculated once an hour, every hour.  For the "weekly" statistics, they're calculated for all checkins that are seen after 11:59:59PM Sunday night, and for the "monthly" statistics, they're calculated for all checkins that are seen after 11:59:59PM of the last day of the previous month.</p>
+
+		<p><strong>Q: Your ideas are intriguing to me and I wish to subscribe to your newsletter.</strong></p>
+		<p>A: For now, there's a <a href="http://blog.map256.com/">blog</a> available for news and information.</p>
+
+		<p><strong>Q: Who wrote this abomination anyways?</strong></p>
+		<p>A: That would be me, Eric Sigler.  You can stalk me on <a href="http://twitter.com/esigler">Twitter</a> or <a href="http://www.map256.com/t/esigler">map256</a>.</p>
+
+		<p><strong>Q: I have a question not answered on this list, who do I talk to?</strong></p>
+		<p>A: Sending an email to <a href="mailto:service@map256.com">service@map256.com</a> </p>
+		<script type="text/javascript">
+		  var _gaq = _gaq || [];
+		  _gaq.push(['_setAccount', 'UA-1636496-2']);
+		  _gaq.push(['_trackPageview']);
+
+		  (function() {
+		    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		  })();
+		</script>
+	</body>
+</html>
