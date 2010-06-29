@@ -2,11 +2,11 @@ Fixes in development:
 ---
 - Convert Foursquare checkin_id and foursquare_id fields back over to string, per the API docs
 
+- Fix bug where you load /, then /scoreboard, then hit back, then click on a marker, and get an abbreviated window
+
 Features in development:
 ---
 - Decouple authorization and callback from a direct Foursquare API call (basically, keep a small batch of requests at the ready)
-
-- Make an actual scoreboard page, now that the frontpage is a map
 
 - Add ability for users to sign in with Google Accounts
 
@@ -22,6 +22,8 @@ Features in development:
 	- "Places I've been overall"
 	- "Places everyone has been overall"
 
+- Make a BETTER scoreboard page
+
 Possible features:
 ---
 - Add Gowalla support
@@ -29,3 +31,7 @@ Possible features:
 - Add Flickr geotagged photos support
 - Add "tweet my history" button
 - Add ability for a user to privately visualize their history
+
+Completed:
+---
+20100628 - Make an actual scoreboard page, now that the frontpage is a map
