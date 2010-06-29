@@ -111,17 +111,37 @@ class FourSqIdLookupHandler(webapp.RequestHandler):
 
 		q = TrackedUserCheckin.all()
 		q.filter('foursquare_id =', user.foursquare_id)
+		q.order('-occured')
 
 		datapts = []
-		for checkin in q:
+		for checkin in q.fetch(100):
 			datapts.append( checkin.location )
 
-		template_values = {'datapoints': datapts }
-		path = os.path.join(os.path.dirname(__file__), 'map.html')
+		lastpt = datapts[0]
+		template_values = {'datapoints': datapts, 'centerpt': lastpt }
+		path = os.path.join(os.path.dirname(__file__), 'templates/map.tmpl')
+		self.response.out.write(template.render(path, template_values))
+
+class ScoreboardHandler(webapp.RequestHandler):
+	def get(self):
+		periods = ('week', 'month', 'alltime')
+		kinds = ('checkin_speed', 'distance_traveled', 'number_checkins')
+		template_values = {}
+
+		for kind in kinds:
+			for period in periods:
+				q = GeneratedStatistic.all()
+				q.filter('description =', kind + '_' + period)
+				q.order('-created')
+				r = q.get()
+				template_values[kind + '_' + period] = simplejson.loads(r.contents)
+
+		path = os.path.join(os.path.dirname(__file__), 'templates/scoreboard.tmpl')
 		self.response.out.write(template.render(path, template_values))
 
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
+										 ('/scoreboard', ScoreboardHandler),
 										 ('/t/(.*)', TwitLookupHandler),
 										 ('/f/(.*)', FourSqIdLookupHandler)],
                                          debug=True)

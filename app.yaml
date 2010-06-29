@@ -20,6 +20,9 @@ handlers:
 - url: /callback.*
   script: authorization.py
 
+- url: /scoreboard
+  script: app.py
+
 ############### QUEUE WORKERS #################
 
 - url: /worker_foursquare_history
