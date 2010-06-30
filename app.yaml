@@ -23,6 +23,10 @@ handlers:
 - url: /scoreboard
   script: app.py
 
+- url: /profile
+  script: app.py
+  login: required
+
 ############### QUEUE WORKERS #################
 
 - url: /worker_foursquare_history

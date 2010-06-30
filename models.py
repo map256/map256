@@ -24,6 +24,9 @@
 
 from google.appengine.ext import db
 
+class Account(db.Model):
+	google_user = db.UserProperty()
+
 class OauthRequest(db.Model):
 	request_key = db.StringProperty()
 	request_secret = db.StringProperty()
@@ -36,6 +39,7 @@ class TrackedUser(db.Model):
 	foursquare_id = db.IntegerProperty()
 	created = db.DateTimeProperty(auto_now_add=True)
 	foursquare_disabled = db.BooleanProperty(default=False)
+	account = db.ReferenceProperty(Account)
 
 class TrackedUserCheckin(db.Model):
 	foursquare_id = db.IntegerProperty()

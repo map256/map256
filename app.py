@@ -31,6 +31,7 @@ import sys
 
 from google.appengine.ext.webapp import template
 from google.appengine.api import memcache
+from google.appengine.api import users
 
 from django.utils import simplejson
 
@@ -139,9 +140,36 @@ class ScoreboardHandler(webapp.RequestHandler):
 		path = os.path.join(os.path.dirname(__file__), 'templates/scoreboard.tmpl')
 		self.response.out.write(template.render(path, template_values))
 
+class ProfileHandler(webapp.RequestHandler):
+	def get(self):
+		user = users.get_current_user()
+		template_values = {}
+
+		account = Account.all()
+		account.filter('google_user =', user)
+
+		if account.count() == 0:
+			account = Account()
+			account.google_user = user
+			self.response.out.write('Here')
+			account.put()
+
+		acc = account.get()
+
+		tusers = TrackedUser.all()
+		tusers.filter('account =', acc)
+		template_values['tusers'] = tusers.fetch(50)
+
+		template_values['nickname'] = user.nickname()
+		template_values['sign_out_url'] = users.create_logout_url('/')
+
+		path = os.path.join(os.path.dirname(__file__), 'templates/profile.tmpl')
+		self.response.out.write(template.render(path, template_values))
+
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
 										 ('/scoreboard', ScoreboardHandler),
+										 ('/profile', ProfileHandler),
 										 ('/t/(.*)', TwitLookupHandler),
 										 ('/f/(.*)', FourSqIdLookupHandler)],
                                          debug=True)

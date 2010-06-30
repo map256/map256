@@ -32,6 +32,7 @@ import sys
 from google.appengine.ext.webapp import template
 from google.appengine.api.labs import taskqueue
 from google.appengine.api import memcache
+from google.appengine.api import users
 
 httplib2_path = 'lib/httplib2.zip'
 sys.path.insert(0, httplib2_path)
@@ -138,6 +139,21 @@ class CallbackHandler(webapp.RequestHandler):
 		tuser.access_secret = access_token['oauth_token_secret']
 		tuser.twitter_username = userinfo['user']['twitter']
 		tuser.foursquare_id = userinfo['user']['id']
+
+		user = users.get_current_user()
+		if user is not None:
+
+			account = Account.all()
+			account.filter('google_user =', user)
+
+			if account.count() == 0:
+				acc = Account()
+				acc.google_user = user
+				acc.put()
+				tuser.account = acc
+			else:
+				acc = account.get()
+				tuser.account = acc
 
 		try:
 			tuser.put()
