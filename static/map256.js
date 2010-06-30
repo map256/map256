@@ -3,6 +3,7 @@ var lines = new Array();
 var infowindows = new Array();
 var markers_visible = false;
 var gradient_visible = false;
+var marker_position = 0;
 
 function hex (c) {
 	var s = "0123456789abcdef";
@@ -70,6 +71,42 @@ function toggle_gradient() {
 	}
 }
 
+function goto_latest() {
+	markers[marker_position].setVisible(false);
+	marker_position = 0;
+	markers[marker_position].setVisible(true);
+}
+
+function goto_previous() {
+	markers[marker_position].setVisible(false);
+
+	if (marker_position < (markers.length-2) ) {
+		marker_position = marker_position + 1;
+	} else {
+		marker_position = markers.length - 1;
+	}
+
+	markers[marker_position].setVisible(true);
+}
+
+function goto_next() {
+	markers[marker_position].setVisible(false);
+
+	if (marker_position == 0) {
+		marker_position = 0;
+	} else {
+		marker_position = marker_position - 1;
+	}
+
+	markers[marker_position].setVisible(true);
+}
+
+function goto_earliest() {
+	markers[marker_position].setVisible(false);
+	marker_position = markers.length - 1;
+	markers[marker_position].setVisible(true);
+}
+
 function initialize() {
 	var mapOptions = {
 		zoom: 12,
@@ -101,6 +138,22 @@ function initialize() {
 	for (var x in lines) {
 		lines[x].setMap(map);
 	}
+
+	google.maps.event.addDomListener(document.getElementById("g_n"), "click", function(ev) {
+		map.setCenter(markers[marker_position].getPosition());
+	});
+
+	google.maps.event.addDomListener(document.getElementById("g_l"), "click", function(ev) {
+		map.setCenter(markers[marker_position].getPosition());
+	});
+
+	google.maps.event.addDomListener(document.getElementById("g_p"), "click", function(ev) {
+		map.setCenter(markers[marker_position].getPosition());
+	});
+
+	google.maps.event.addDomListener(document.getElementById("g_e"), "click", function(ev) {
+		map.setCenter(markers[marker_position].getPosition());
+	});
 }
 
 function createMarker(marker, infowindow, map) {

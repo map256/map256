@@ -23,6 +23,11 @@
 			<hr>
 			<input type="button" onclick="toggle_markers()" value="Toggle markers">
 			<input type="button" onclick="toggle_gradient()" value="Toggle recent-ness gradient">
+			<hr>
+			<span style = "font-size:9pt;">Oldest <input type="button" id="g_e" onclick="goto_earliest()" value="<<">
+			<input type="button" id="g_p" onclick="goto_previous()" value="<">
+			<input type="button" id="g_n" onclick="goto_next()" value=">">
+			<input type="button" id="g_l" onclick="goto_latest()" value=">>"> Newest</span>
 		</div>
 		<script type="text/javascript">
 			var _gaq = _gaq || [];
