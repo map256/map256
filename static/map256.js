@@ -131,7 +131,7 @@ function initialize() {
 		markers.push(new google.maps.Marker({
 			position: checkinPath[y],
 			map: map,
-			visible: false,
+			visible: false
 		}));
 	}
 
@@ -198,7 +198,7 @@ function initialize_front() {
 		
 		infowindows[key] = new google.maps.InfoWindow({
 			content: "<h1>"+key+"</h1>"+"<a href=\"/t/"+key+"\">See the map for this person</a>",
-			maxWidth: 200,
+			maxWidth: 200
 		});
 	}
 
