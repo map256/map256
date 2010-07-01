@@ -137,7 +137,10 @@ class CallbackHandler(webapp.RequestHandler):
 		tuser = TrackedUser()
 		tuser.access_key = access_token['oauth_token']
 		tuser.access_secret = access_token['oauth_token_secret']
-		tuser.twitter_username = userinfo['user']['twitter']
+
+		if userinfo['user'].has_key('twitter'):
+			tuser.twitter_username = userinfo['user']['twitter']
+
 		tuser.foursquare_id = userinfo['user']['id']
 
 		user = users.get_current_user()
