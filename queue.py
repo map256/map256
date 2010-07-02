@@ -131,7 +131,11 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 				q3.order('-occured')
 				prev = q3.get()
 
-				ci.previous_checkin = prev
+				if prev is None:
+					ci.put()
+					ci.previous_checkin = ci
+				else:
+					ci.previous_checkin = prev
 
 				#Using Spherical Law of Cosines to determine distance
 				lon1 = ci.previous_checkin.location.lon
