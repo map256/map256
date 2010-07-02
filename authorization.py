@@ -164,7 +164,7 @@ class CallbackHandler(webapp.RequestHandler):
 			self.response.out.write('Hmm, looks like Google\'s currently doing maintenance on their platform, sorry!')
 			pass
 		else:
-			taskqueue.add(url='/history_worker', params={'fsq_id': tuser.foursquare_id}, method='GET')		
+			taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': tuser.foursquare_id}, method='GET')
 			url = '/t/'+userinfo['user']['twitter']
 			path = os.path.join(os.path.dirname(__file__), 'templates/callback.tmpl')
 			self.response.out.write(template.render(path, {'map_url': url}))
