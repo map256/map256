@@ -169,7 +169,7 @@ class CallbackHandler(webapp.RequestHandler):
 			if userinfo['user'].has_key('twitter'):
 				url = '/t/'+userinfo['user']['twitter']
 			else:
-				url = '/f/'+userinfo['user']['id']
+				url = '/f/'+str(userinfo['user']['id'])
 
 			path = os.path.join(os.path.dirname(__file__), 'templates/callback.tmpl')
 			self.response.out.write(template.render(path, {'map_url': url}))
