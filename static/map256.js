@@ -51,7 +51,7 @@ function toggle_gradient() {
 	var cur_col = '#FF0000';
 
 	if ( gradient_visible == false ) {
-		for (var x in lines) {
+		for (var x = 0; x < lines.length; x++) {
 			var c = [];
 			var tmp_a = 1 - (x / (lines.length - 1));
 			c[0] = start_col[0] * tmp_a + (1 - tmp_a) * end_col[0];
@@ -63,7 +63,7 @@ function toggle_gradient() {
 
 		gradient_visible = true;
 	} else {
-		for (var x in lines) {
+		for (var x = 0; x < lines.length; x++) {
 			lines[x].setOptions({ strokeColor: '#000000'});
 		}
 

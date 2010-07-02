@@ -68,3 +68,7 @@ handlers:
 - url: /map256.js
   static_files: static/map256.js
   upload: static/map256.js
+
+- url: /json_parse.js
+  static_files: static/json_parse.js
+  upload: static/json_parse.js
