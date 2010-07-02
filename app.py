@@ -28,6 +28,7 @@ from google.appengine.ext.webapp import util
 import cgi
 import os
 import sys
+import datetime
 
 from google.appengine.ext.webapp import template
 from google.appengine.api import memcache
@@ -166,10 +167,50 @@ class ProfileHandler(webapp.RequestHandler):
 		path = os.path.join(os.path.dirname(__file__), 'templates/profile.tmpl')
 		self.response.out.write(template.render(path, template_values))
 
+class DataHandler(webapp.RequestHandler):
+	def get(self, key=None):
+		data = memcache.get('checkindata_'+key)
+		self.response.headers.add_header('Content-Type', 'application/json')
+
+		if data is None:
+			data = []
+
+			try:
+				k1 = db.Key(key)
+			except:
+				return
+
+			user = TrackedUser.get(k1)
+
+			if user is None:
+				return
+
+			checkins = TrackedUserCheckin.all()
+			checkins.filter('foursquare_id =', user.foursquare_id)
+
+			if checkins.count() == 0:
+				return
+
+			for checkin in checkins:
+				info = {}
+				info['location'] = str(checkin.location)
+				info['occurred'] = str(checkin.occured)
+				data.append(info)
+
+			data.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['occurred'], '%Y-%m-%d %H:%M:%S'),
+			                              datetime.datetime.strptime(y['occurred'], '%Y-%m-%d %H:%M:%S')))
+
+			encoded = simplejson.dumps(data)
+			memcache.add('checkindata_'+key, encoded, 60)
+			self.response.out.write(encoded)
+		else:
+			self.response.out.write(data)
+
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
 										 ('/scoreboard', ScoreboardHandler),
 										 ('/profile', ProfileHandler),
+										 ('/data/(.*)', DataHandler),
 										 ('/t/(.*)', TwitLookupHandler),
 										 ('/f/(.*)', FourSqIdLookupHandler)],
                                          debug=True)

@@ -27,6 +27,9 @@ handlers:
   script: app.py
   login: required
 
+- url: /data/(.*)
+  script: app.py
+
 ############### QUEUE WORKERS #################
 
 - url: /worker_foursquare_history
