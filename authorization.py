@@ -165,7 +165,12 @@ class CallbackHandler(webapp.RequestHandler):
 			pass
 		else:
 			taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': tuser.foursquare_id}, method='GET')
-			url = '/t/'+userinfo['user']['twitter']
+
+			if userinfo['user'].has_key('twitter'):
+				url = '/t/'+userinfo['user']['twitter']
+			else:
+				url = '/f/'+userinfo['user']['id']
+
 			path = os.path.join(os.path.dirname(__file__), 'templates/callback.tmpl')
 			self.response.out.write(template.render(path, {'map_url': url}))
 
@@ -176,10 +181,9 @@ class CallbackHandler(webapp.RequestHandler):
 		Hey!  It looks like another person has authorized Map256 to access
 		Foursquare data!
 
-		Twitter username: %s
 		Foursquare ID: %s
 
-		""" % ( tuser.twitter_username, tuser.foursquare_id ) )
+		""" % tuser.foursquare_id )
 
 def main():
     application = webapp.WSGIApplication([('/authorize', AuthorizeHandler),
