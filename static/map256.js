@@ -175,7 +175,7 @@ function initialize_front() {
 	for (key in blob2) {
 		var path = new Array();
 
-		for (item in blob2[key]) {
+		for (var item in blob2[key]) {
 			var foo = blob2[key][item].split(",");
 			path.push(new google.maps.LatLng(foo[0], foo[1]));
 		}
