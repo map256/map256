@@ -30,6 +30,14 @@ handlers:
 - url: /data/(.*)
   script: app.py
 
+- url: /foursquare_authorization
+  script: app.py
+  login: required
+
+- url: /foursquare_callback
+  script: app.py
+  login: required
+
 ############### QUEUE WORKERS #################
 
 - url: /worker_foursquare_history

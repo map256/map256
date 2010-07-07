@@ -36,6 +36,8 @@ from google.appengine.api import users
 
 from django.utils import simplejson
 
+import m256
+
 from m256_cfg import *
 from models import *
 
@@ -206,10 +208,127 @@ class DataHandler(webapp.RequestHandler):
 		else:
 			self.response.out.write(data)
 
+class FoursquareAuthorizationHandler(webapp.RequestHandler):
+	def get(self):
+		req_ip = memcache.get('iprate_'+self.request.remote_addr)
+
+		if req_ip is None:
+			req_ip = 1
+			memcache.add('iprate_'+self.request.remote_addr, req_ip, 120)
+		else:
+			req_ip = req_ip+1
+			memcache.replace('iprate_'+self.request.remote_addr, req_ip, 120)
+
+		if req_ip > 10:
+			self.response.out.write('Rate limiter kicked in, /authorize blocked for 120 seconds')
+			return
+
+		content = m256.foursquare_consumer_request(request_token_url, 'GET')
+
+		request_token = dict(cgi.parse_qsl(content))
+
+		req = OauthRequest()
+		req.request_key = request_token['oauth_token']
+		req.request_secret = request_token['oauth_token_secret']
+
+		try:
+			req.put()
+		except CapabilityDisabledError:
+			self.response.out.write('Hmm, looks like Google\'s currently doing maintenance on their platform, sorry!')
+			return
+		else:
+			url = authorize_url+'?oauth_token='+request_token['oauth_token']
+			m256.output_template(self, 'templates/authorize.tmpl', {'url': url})
+
+class FoursquareCallbackHandler(webapp.RequestHandler):
+	def get(self):
+		arg = self.request.get('oauth_token')
+		q = OauthRequest.all()
+		q.filter('request_key = ', arg)
+
+		if q.count() < 1:
+			raise Exception('Invalid request (key does not exist)')
+
+		req = q.get()
+
+		content = m256.foursquare_token_request(access_token_url, 'POST', req.request_key, req.request_secret)
+
+		access_token = dict(cgi.parse_qsl(content))
+
+		content = m256.foursquare_token_request(userdetail_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
+
+		db.delete(req)
+		#FIXME: Is there any scenario in which a request key, once approved, should be kept around?
+
+		#FIXME: Saw an odd bug one time where access token was requested, approved, but timed out before response was given
+		#Dunno how to handle it just yet, but putting it in here before I forget
+
+		userinfo = simplejson.loads(content)
+
+		q = TrackedUser.all()
+		q.filter('foursquare_id = ', userinfo['user']['id'])
+
+		if q.count() > 0:
+			raise Exception('User is already authorized!')
+
+		#FIXME: Need to check for these keys first
+		tuser = TrackedUser()
+		tuser.access_key = access_token['oauth_token']
+		tuser.access_secret = access_token['oauth_token_secret']
+
+		if userinfo['user'].has_key('twitter'):
+			tuser.twitter_username = userinfo['user']['twitter']
+
+		tuser.foursquare_id = userinfo['user']['id']
+
+		user = users.get_current_user()
+		if user is not None:
+
+			account = Account.all()
+			account.filter('google_user =', user)
+
+			if account.count() == 0:
+				acc = Account()
+				acc.google_user = user
+				acc.put()
+				tuser.account = acc
+			else:
+				acc = account.get()
+				tuser.account = acc
+
+		try:
+			tuser.put()
+		except CapabilityDisabledError:
+			self.response.out.write('Hmm, looks like Google\'s currently doing maintenance on their platform, sorry!')
+			pass
+		else:
+			taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': tuser.foursquare_id}, method='GET')
+
+			if userinfo['user'].has_key('twitter'):
+				url = '/t/'+userinfo['user']['twitter']
+			else:
+				url = '/f/'+str(userinfo['user']['id'])
+
+			path = os.path.join(os.path.dirname(__file__), 'templates/callback.tmpl')
+			self.response.out.write(template.render(path, {'map_url': url}))
+
+		mail.send_mail(sender='Map256 <service@map256.com>',
+		              to='Eric Sigler <esigler@gmail.com>',
+		              subject='Map256 Foursquare Authorization',
+		              body="""
+		Hey!  It looks like another person has authorized Map256 to access
+		Foursquare data!
+
+		Foursquare ID: %s
+
+		""" % tuser.foursquare_id )
+
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
 										 ('/scoreboard', ScoreboardHandler),
 										 ('/profile', ProfileHandler),
+										 ('/foursquare_authorization', FoursquareAuthorizationHandler),
+										 ('/foursquare_callback', FoursquareCallbackHandler),
 										 ('/data/(.*)', DataHandler),
 										 ('/t/(.*)', TwitLookupHandler),
 										 ('/f/(.*)', FourSqIdLookupHandler)],
