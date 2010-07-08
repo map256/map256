@@ -14,21 +14,15 @@ handlers:
 - url: /f/(.*)
   script: app.py
 
-- url: /authorize.*
-  script: authorization.py
-
-- url: /callback.*
-  script: authorization.py
-
 - url: /scoreboard
+  script: app.py
+
+- url: /data/(.*)
   script: app.py
 
 - url: /profile
   script: app.py
   login: required
-
-- url: /data/(.*)
-  script: app.py
 
 - url: /foursquare_authorization
   script: app.py

@@ -154,10 +154,10 @@ class ProfileHandler(webapp.RequestHandler):
 		if account.count() == 0:
 			account = Account()
 			account.google_user = user
-			self.response.out.write('Here')
 			account.put()
-
-		acc = account.get()
+			acc = account
+		else:
+			acc = account.get()
 
 		tusers = TrackedUser.all()
 		tusers.filter('account =', acc)
