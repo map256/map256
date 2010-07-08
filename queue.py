@@ -57,7 +57,7 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 	def get(self, fsq_id=None, since=None):
 		fsq_id = self.request.get('fsq_id')
 
-		q = TrackedUser.all()
+		q = FoursquareAccount.all()
 		q.filter('foursquare_id = ', long(fsq_id))
 
 		if q.count() != 1:
@@ -211,7 +211,7 @@ class StatisticsWorker(webapp.RequestHandler):
 
 		elif kind == 'number_checkins':
 			listing = {}
-			users = TrackedUser.all()
+			users = FoursquareAccount.all()
 
 			for user in users:
 				q1 = TrackedUserCheckin.all()

@@ -31,7 +31,7 @@ from models import *
 
 class FoursquareHistoryDispatcher(webapp.RequestHandler):
 	def get(self):
-		users = TrackedUser.all()
+		users = FoursquareAccount.all()
 		users.filter('foursquare_disabled = ', False)
 
 		for user in users:

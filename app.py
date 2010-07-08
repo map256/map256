@@ -33,6 +33,8 @@ import datetime
 from google.appengine.ext.webapp import template
 from google.appengine.api import memcache
 from google.appengine.api import users
+from google.appengine.api.labs import taskqueue
+from google.appengine.api import mail
 
 from django.utils import simplejson
 
@@ -47,7 +49,7 @@ class MainHandler(webapp.RequestHandler):
 
 		if blob is None:
 
-			users = TrackedUser.all()
+			users = FoursquareAccount.all()
 			users.filter('foursquare_disabled =', False)
 
 			blob = {}
@@ -76,7 +78,7 @@ class TwitLookupHandler(webapp.RequestHandler):
 		datapts = memcache.get('datapts_'+username)
 
 		if datapts is None:
-			q = TrackedUser.all()
+			q = FoursquareAccount.all()
 			q.filter('twitter_username = ', username)
 
 			if q.count() < 1:
@@ -105,7 +107,7 @@ class TwitLookupHandler(webapp.RequestHandler):
 
 class FourSqIdLookupHandler(webapp.RequestHandler):
 	def get(self, fsq_id=None):
-		q = TrackedUser.all()
+		q = FoursquareAccount.all()
 		q.filter('foursquare_id =', long(fsq_id))
 
 		if q.count() < 1:
@@ -159,7 +161,7 @@ class ProfileHandler(webapp.RequestHandler):
 		else:
 			acc = account.get()
 
-		tusers = TrackedUser.all()
+		tusers = FoursquareAccount.all()
 		tusers.filter('account =', acc)
 		template_values['tusers'] = tusers.fetch(50)
 
@@ -182,7 +184,7 @@ class DataHandler(webapp.RequestHandler):
 			except:
 				return
 
-			user = TrackedUser.get(k1)
+			user = FoursquareAccount.get(k1)
 
 			if user is None:
 				return
@@ -265,14 +267,14 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 
 		userinfo = simplejson.loads(content)
 
-		q = TrackedUser.all()
+		q = FoursquareAccount.all()
 		q.filter('foursquare_id = ', userinfo['user']['id'])
 
 		if q.count() > 0:
 			raise Exception('User is already authorized!')
 
 		#FIXME: Need to check for these keys first
-		tuser = TrackedUser()
+		tuser = FoursquareAccount()
 		tuser.access_key = access_token['oauth_token']
 		tuser.access_secret = access_token['oauth_token_secret']
 

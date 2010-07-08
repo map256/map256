@@ -23,9 +23,11 @@
 #
 
 from google.appengine.ext import db
+from google.appengine.ext.db import polymodel
 
 class Account(db.Model):
 	google_user = db.UserProperty()
+	created = db.DateTimeProperty(auto_now_add=True)
 
 class OauthRequest(db.Model):
 	request_key = db.StringProperty()
@@ -55,3 +57,25 @@ class GeneratedStatistic(db.Model):
 	created = db.DateTimeProperty(auto_now_add=True)
 	description = db.StringProperty()
 	contents = db.TextProperty() #JSON encoded values
+
+class FoursquareAccount(db.Model):
+	access_key = db.StringProperty()
+	access_secret = db.StringProperty()
+	twitter_username = db.StringProperty()
+	foursquare_id = db.IntegerProperty()
+	created = db.DateTimeProperty(auto_now_add=True)
+	foursquare_disabled = db.BooleanProperty(default=False)
+	account = db.ReferenceProperty(Account)
+
+class Checkin(polymodel.PolyModel):
+	created = db.DateTimeProperty(auto_now_add=True)
+	occurred = db.DateTimeProperty()
+	location = db.GeoPtProperty()
+	description = db.StringProperty()
+	distance_traveled = db.FloatProperty() #stored in kilometers
+	velocity = db.FloatProperty() #stored in km/s
+	previous_checkin = db.SelfReferenceProperty()
+
+class FoursquareCheckin(Checkin):
+	owner = db.ReferenceProperty(FoursquareAccount)
+	checkin_id = db.StringProperty()
