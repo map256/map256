@@ -1,18 +1,10 @@
 Fixes in development:
 ---
-- Convert Foursquare checkin_id and foursquare_id fields back over to string, per the API docs
-
 - Fix bug where you load /, then /scoreboard, then hit back, then click on a marker, and get an abbreviated window
 
 Features in development:
 ---
 - Decouple authorization and callback from a direct Foursquare API call (basically, keep a small batch of requests at the ready)
-
-- Add ability for users to sign in with Google Accounts
-
-- Add ability to verify / begin ownership of account access
-
-- Add ability to remove account & history
 
 - Revamp storage of statistics, it's not going to be very workable long term, but would be best done after GA user signup is in place
 
@@ -35,3 +27,7 @@ Possible features:
 Completed:
 ---
 20100628 - Make an actual scoreboard page, now that the frontpage is a map
+20100708 - Add ability for users to sign in with Google Accounts
+20100708 - Add ability to verify / begin ownership of account access
+20100708 - Add ability to remove account & history
+20100708 - Convert Foursquare checkin_id and foursquare_id fields back over to string, per the API docs
