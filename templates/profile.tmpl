@@ -12,9 +12,9 @@
 		<ul>
 {% for tuser in tusers %}
 {% if tuser.twitter_username %}
-			<li><a href="/t/{{ tuser.twitter_username}}">{{ tuser.twitter_username}}</a> (<a href="/foursquare_account_delete?fsq_id={{ tuser.foursquare_id }}">Delete</a>)</li>
+			<li><a href="/t/{{ tuser.twitter_username}}">{{ tuser.twitter_username}}</a> (<a href="/foursquare_account_delete?fsq_id={{ tuser.foursquare_id }}">delete</a>)</li>
 {% else %}
-			<li><a href="/t/{{ tuser.foursquare_id}}">{{ tuser.foursquare_id}}</a> (<a href="/foursquare_account_delete?fsq_id={{ tuser.foursquare_id }}">delete</a>)</li>
+			<li><a href="/f/{{ tuser.foursquare_id}}">{{ tuser.foursquare_id}}</a> (<a href="/foursquare_account_delete?fsq_id={{ tuser.foursquare_id }}">delete</a>)</li>
 {% endif %}
 {% endfor %}
 		</ul>

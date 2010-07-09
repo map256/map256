@@ -119,7 +119,12 @@ class FourSqIdLookupHandler(webapp.RequestHandler):
 		for checkin in q.fetch(100):
 			datapts.append( checkin.location )
 
-		m256.output_template(self, 'templates/map.tmpl', {'datapoints': datapts, 'centerpt': datapts[0] })
+		if len(datapts) > 0:
+			centerpt = datapts[0]
+		else:
+			centerpt = '37.9523113,-91.7715052'
+
+		m256.output_template(self, 'templates/map.tmpl', {'datapoints': datapts, 'centerpt': centerpt })
 
 class ScoreboardHandler(webapp.RequestHandler):
 	def get(self):
@@ -322,7 +327,7 @@ class FoursquareAccountDeleteHandler(webapp.RequestHandler):
 
 		q3 = Account.all()
 		q3.filter('google_user =', user)
-		u_acc = account.get()
+		u_acc = q3.get()
 
 		q1 = FoursquareAccount.all()
 		q1.filter('foursquare_id =', str(fsq_id))
