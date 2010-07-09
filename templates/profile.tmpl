@@ -7,12 +7,19 @@
 	</head>
 	<body>
 		<h1><a href="/">map256</a>: Profile</h1>
-		<p><a href="/foursquare_authorization">Authorize a foursquare account</a></p>
+		<hr>
+		<h2>Foursquare Accounts:</h2>
 		<ul>
 {% for tuser in tusers %}
+{% if tuser.twitter_username %}
 			<li><a href="/t/{{ tuser.twitter_username}}">{{ tuser.twitter_username}}</a> (<a href="/foursquare_account_delete?fsq_id={{ tuser.foursquare_id }}">Delete</a>)</li>
+{% else %}
+			<li><a href="/t/{{ tuser.foursquare_id}}">{{ tuser.foursquare_id}}</a> (<a href="/foursquare_account_delete?fsq_id={{ tuser.foursquare_id }}">delete</a>)</li>
+{% endif %}
 {% endfor %}
 		</ul>
+		<p><a href="/foursquare_authorization">Add a foursquare account</a></p>
+		<hr>
 		<p><a href="{{ signout_url }}">Sign out</a></p>
 		<p>Comments, questions, concerns?  Check out the <a href="/faq.html">FAQ</a></p>
 	</body>

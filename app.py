@@ -318,14 +318,21 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 class FoursquareAccountDeleteHandler(webapp.RequestHandler):
 	def get(self):
 		fsq_id = self.request.get('fsq_id')
+		user = users.get_current_user()
+
+		q3 = Account.all()
+		q3.filter('google_user =', user)
+		u_acc = account.get()
+
 		q1 = FoursquareAccount.all()
 		q1.filter('foursquare_id =', str(fsq_id))
+		q1.filter('account =', u_acc)
 
 		if q1.count() != 0:
 			r1 = q1.fetch(10)
 
-			for acct in r1:
-				acct.delete()
+			for fsq_acct in r1:
+				fsq_acct.delete()
 
 		q2 = FoursquareCheckin.all()
 		q2.filter('foursquare_id =', str(fsq_id))
