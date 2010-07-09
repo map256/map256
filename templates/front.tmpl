@@ -17,7 +17,11 @@
 			<span style = "font-size:16pt;"><a href="/">Map256</a></span>
 			<span style = "font-size:9pt;">(<a href="/faq.html">FAQ</a>, <a href="/scoreboard">Scoreboard</a>)</span>
 			<hr>
+{% if logged_in %}
+			<p>Check out <a href="/profile">your profile</a>, or <a href="{{ signout_url }}">sign out</a>.</p>
+{% else %}
 			<p>Want to get started?  Make sure you have a <a href="http://foursquare.com/">Foursquare</a> account, then <a href="/profile">sign in to Map256</a>.</p>
+{% endif %}
 		</div>
 		<script type="text/javascript">
 			var _gaq = _gaq || [];

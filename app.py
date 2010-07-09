@@ -70,8 +70,7 @@ class MainHandler(webapp.RequestHandler):
 			blob = simplejson.dumps(blob)
 			memcache.add('frontpage_blob', blob, 300)
 
-		path = os.path.join(os.path.dirname(__file__), 'templates/front.tmpl')
-		self.response.out.write(template.render(path, {'blob': blob}))
+		m256.output_template(self, 'templates/front.tmpl', {'blob': blob})
 
 class TwitLookupHandler(webapp.RequestHandler):
 	def get(self, username=None):
@@ -100,10 +99,7 @@ class TwitLookupHandler(webapp.RequestHandler):
 
 			memcache.add('datapts_'+username, datapts, 300)
 
-		lastpt = datapts[0]
-		template_values = {'datapoints': datapts, 'centerpt': lastpt }
-		path = os.path.join(os.path.dirname(__file__), 'templates/map.tmpl')
-		self.response.out.write(template.render(path, template_values))
+		m256.output_template(self, 'templates/map.tmpl', {'datapoints': datapts, 'centerpt': datapts[0] })
 
 class FourSqIdLookupHandler(webapp.RequestHandler):
 	def get(self, fsq_id=None):
@@ -123,10 +119,7 @@ class FourSqIdLookupHandler(webapp.RequestHandler):
 		for checkin in q.fetch(100):
 			datapts.append( checkin.location )
 
-		lastpt = datapts[0]
-		template_values = {'datapoints': datapts, 'centerpt': lastpt }
-		path = os.path.join(os.path.dirname(__file__), 'templates/map.tmpl')
-		self.response.out.write(template.render(path, template_values))
+		m256.output_template(self, 'templates/map.tmpl', {'datapoints': datapts, 'centerpt': datapts[0] })
 
 class ScoreboardHandler(webapp.RequestHandler):
 	def get(self):
@@ -142,8 +135,7 @@ class ScoreboardHandler(webapp.RequestHandler):
 				r = q.get()
 				template_values[kind + '_' + period] = simplejson.loads(r.contents)
 
-		path = os.path.join(os.path.dirname(__file__), 'templates/scoreboard.tmpl')
-		self.response.out.write(template.render(path, template_values))
+		m256.output_template(self, 'templates/scoreboard.tmpl', template_values)
 
 class ProfileHandler(webapp.RequestHandler):
 	def get(self):
@@ -168,8 +160,7 @@ class ProfileHandler(webapp.RequestHandler):
 		template_values['nickname'] = user.nickname()
 		template_values['sign_out_url'] = users.create_logout_url('/')
 
-		path = os.path.join(os.path.dirname(__file__), 'templates/profile.tmpl')
-		self.response.out.write(template.render(path, template_values))
+		m256.output_template(self, 'templates/profile.tmpl', template_values)
 
 class DataHandler(webapp.RequestHandler):
 	def get(self, key=None):

@@ -11,6 +11,7 @@ sys.path.insert(0, oauth_path)
 import oauth2 as oauth
 
 from google.appengine.ext.webapp import template
+from google.appengine.api import users
 
 def foursquare_consumer_request(url, method):
 	consumer = oauth.Consumer(consumer_key, consumer_secret)
@@ -37,5 +38,13 @@ def foursquare_token_request(url, method, key, secret):
 
 def output_template(app, template_path, variables):
 	app.response.headers.add_header('Content-Type', 'text/html; charset=\"utf-8\"')
+
+	user = users.get_current_user()
+	if user is None:
+		variables['logged_in'] = False
+	else:
+		variables['logged_in'] = True
+		variables['signout_url'] = users.create_logout_url('/')
+
 	path = os.path.join(os.path.dirname(__file__), template_path)
 	app.response.out.write(template.render(path, variables))
