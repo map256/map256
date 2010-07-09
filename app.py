@@ -158,7 +158,6 @@ class ProfileHandler(webapp.RequestHandler):
 		template_values['tusers'] = tusers.fetch(50)
 
 		template_values['nickname'] = user.nickname()
-		template_values['sign_out_url'] = users.create_logout_url('/')
 
 		m256.output_template(self, 'templates/profile.tmpl', template_values)
 
