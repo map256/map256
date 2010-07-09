@@ -32,6 +32,10 @@ handlers:
   script: app.py
   login: required
 
+- url: /foursquare_account_delete
+  script: app.py
+  login: required
+
 ############### QUEUE WORKERS #################
 
 - url: /worker_foursquare_history

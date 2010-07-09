@@ -325,12 +325,36 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 
 		""" % tuser.foursquare_id )
 
+class FoursquareAccountDeleteHandler(webapp.RequestHandler):
+	def get(self):
+		fsq_id = self.request.get('fsq_id')
+		q1 = FoursquareAccount.all()
+		q1.filter('foursquare_id =', str(fsq_id))
+
+		if q1.count() != 0:
+			r1 = q1.fetch(10)
+
+			for acct in r1:
+				acct.delete()
+
+		q2 = FoursquareCheckin.all()
+		q2.filter('foursquare_id =', str(fsq_id))
+
+		if q2.count() != 0:
+			r2 = q2.fetch(1000)
+
+			for ci in r2:
+				ci.delete()
+
+		m256.output_template(self, 'templates/fsq_deleted.tmpl', {'sign_out_url': users.create_logout_url('/')})
+
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
 										 ('/scoreboard', ScoreboardHandler),
 										 ('/profile', ProfileHandler),
 										 ('/foursquare_authorization', FoursquareAuthorizationHandler),
 										 ('/foursquare_callback', FoursquareCallbackHandler),
+										 ('/foursquare_account_delete', FoursquareAccountDeleteHandler),
 										 ('/data/(.*)', DataHandler),
 										 ('/t/(.*)', TwitLookupHandler),
 										 ('/f/(.*)', FourSqIdLookupHandler)],
