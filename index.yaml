@@ -14,6 +14,20 @@ indexes:
   properties:
   - name: class
   - name: foursquare_id
+  - name: checkin_id
+    direction: desc
+
+- kind: Checkin
+  properties:
+  - name: class
+  - name: foursquare_id
+  - name: occurred
+    direction: desc
+
+- kind: Checkin
+  properties:
+  - name: class
+  - name: owner
   - name: occurred
     direction: desc
 

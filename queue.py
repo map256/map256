@@ -137,6 +137,8 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 				else:
 					ci.previous_checkin = prev
 
+				ci.owner = user
+
 				#Using Spherical Law of Cosines to determine distance
 				lon1 = ci.previous_checkin.location.lon
 				lon2 = ci.location.lon

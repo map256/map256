@@ -57,7 +57,7 @@ class MainHandler(webapp.RequestHandler):
 			for user in users:
 				if user.twitter_username is not None:
 					q1 = FoursquareCheckin.all()
-					q1.filter('foursquare_id = ', user.foursquare_id)
+					q1.filter('owner = ', user)
 					q1.order('-occurred')
 					r1 = q1.fetch(10)
 					tmpa = []
@@ -85,7 +85,7 @@ class TwitLookupHandler(webapp.RequestHandler):
 
 			user = q.get()
 			q = FoursquareCheckin.all()
-			q.filter('foursquare_id =', user.foursquare_id)
+			q.filter('owner =', user)
 			q.order('-occurred')
 
 			if q.count() < 1:
@@ -112,7 +112,7 @@ class FourSqIdLookupHandler(webapp.RequestHandler):
 		user = q.get()
 
 		q = FoursquareCheckin.all()
-		q.filter('foursquare_id =', user.foursquare_id)
+		q.filter('owner =', user)
 		q.order('-occurred')
 
 		datapts = []
@@ -185,7 +185,7 @@ class DataHandler(webapp.RequestHandler):
 				return
 
 			checkins = FoursquareCheckin.all()
-			checkins.filter('foursquare_id =', user.foursquare_id)
+			checkins.filter('owner =', user)
 
 			if checkins.count() == 0:
 				return

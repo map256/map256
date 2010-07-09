@@ -36,7 +36,7 @@ class FoursquareHistoryDispatcher(webapp.RequestHandler):
 
 		for user in users:
 			q = FoursquareCheckin.all()
-			q.filter('foursquare_id = ', user.foursquare_id)
+			q.filter('owner = ', user)
 			q.order('-checkin_id')
 			if q.count() == 0:
 				taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': user.foursquare_id}, method='GET')
