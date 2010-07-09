@@ -62,7 +62,7 @@ class FoursquareAccount(db.Model):
 	access_key = db.StringProperty()
 	access_secret = db.StringProperty()
 	twitter_username = db.StringProperty()
-	foursquare_id = db.IntegerProperty()
+	foursquare_id = db.StringProperty()
 	created = db.DateTimeProperty(auto_now_add=True)
 	foursquare_disabled = db.BooleanProperty(default=False)
 	account = db.ReferenceProperty(Account)
@@ -79,3 +79,4 @@ class Checkin(polymodel.PolyModel):
 class FoursquareCheckin(Checkin):
 	owner = db.ReferenceProperty(FoursquareAccount)
 	checkin_id = db.StringProperty()
+	foursquare_id = db.StringProperty()

@@ -35,7 +35,7 @@ class FoursquareHistoryDispatcher(webapp.RequestHandler):
 		users.filter('foursquare_disabled = ', False)
 
 		for user in users:
-			q = TrackedUserCheckin.all()
+			q = FoursquareCheckin.all()
 			q.filter('foursquare_id = ', user.foursquare_id)
 			q.order('-checkin_id')
 			if q.count() == 0:

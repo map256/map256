@@ -58,7 +58,7 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 		fsq_id = self.request.get('fsq_id')
 
 		q = FoursquareAccount.all()
-		q.filter('foursquare_id = ', long(fsq_id))
+		q.filter('foursquare_id = ', str(fsq_id))
 
 		if q.count() != 1:
 			raise Exception('User does not exist')
@@ -116,19 +116,19 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 		checkins.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['created'], '%a, %d %b %y %H:%M:%S +0000'), datetime.datetime.strptime(y['created'], '%a, %d %b %y %H:%M:%S +0000')))
 
 		for checkin in checkins:
-			q2 = TrackedUserCheckin.all()
+			q2 = FoursquareCheckin.all()
 			q2.filter('checkin_id = ', checkin['id'])
 
 			if q2.count() == 0:
-				ci = TrackedUserCheckin()
-				ci.foursquare_id = long(fsq_id)
+				ci = FoursquareCheckin()
+				ci.foursquare_id = str(fsq_id)
 				ci.location = str(checkin['venue']['geolat'])+','+str(checkin['venue']['geolong'])
-				ci.checkin_id = checkin['id']
-				ci.occured = datetime.datetime.strptime(checkin['created'], '%a, %d %b %y %H:%M:%S +0000')
+				ci.checkin_id = str(checkin['id'])
+				ci.occurred = datetime.datetime.strptime(checkin['created'], '%a, %d %b %y %H:%M:%S +0000')
 
-				q3 = TrackedUserCheckin.all()
+				q3 = FoursquareCheckin.all()
 				q3.filter('foursquare_id = ', ci.foursquare_id)
-				q3.order('-occured')
+				q3.order('-occurred')
 				prev = q3.get()
 
 				if prev is None:
@@ -154,7 +154,7 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 				distance = distance * 1.852 #to kilometer
 
 				ci.distance_traveled = distance
-				td = ci.occured - ci.previous_checkin.occured
+				td = ci.occurred - ci.previous_checkin.occurred
 
 				if distance != 0:
 					ci.velocity = distance / td.seconds
@@ -184,8 +184,8 @@ class StatisticsWorker(webapp.RequestHandler):
 		listing = {}
 
 		if kind == 'checkin_speed':
-			checkins = TrackedUserCheckin.all()
-			checkins.filter('occured >= ', start_date)
+			checkins = FoursquareCheckin.all()
+			checkins.filter('occurred >= ', start_date)
 
 			for checkin in checkins:
 				if listing.has_key(str(checkin.foursquare_id)):
@@ -197,8 +197,8 @@ class StatisticsWorker(webapp.RequestHandler):
 			results = simplejson.dumps(sorted(listing.iteritems(), key=itemgetter(1), reverse=True))
 
 		elif kind == 'distance_traveled':
-			checkins = TrackedUserCheckin.all()
-			checkins.filter('occured >= ', start_date)
+			checkins = FoursquareCheckin.all()
+			checkins.filter('occurred >= ', start_date)
 
 			for checkin in checkins:
 				if listing.has_key(str(checkin.foursquare_id)):
@@ -214,9 +214,9 @@ class StatisticsWorker(webapp.RequestHandler):
 			users = FoursquareAccount.all()
 
 			for user in users:
-				q1 = TrackedUserCheckin.all()
-				q1.filter('foursquare_id = ', long(user.foursquare_id))
-				q1.filter('occured >= ', start_date)
+				q1 = FoursquareCheckin.all()
+				q1.filter('foursquare_id = ', str(user.foursquare_id))
+				q1.filter('occurred >= ', start_date)
 
 				listing[str(user.foursquare_id)] = q1.count()
 

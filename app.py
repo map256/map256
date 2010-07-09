@@ -56,9 +56,9 @@ class MainHandler(webapp.RequestHandler):
 
 			for user in users:
 				if user.twitter_username is not None:
-					q1 = TrackedUserCheckin.all()
+					q1 = FoursquareCheckin.all()
 					q1.filter('foursquare_id = ', user.foursquare_id)
-					q1.order('-occured')
+					q1.order('-occurred')
 					r1 = q1.fetch(10)
 					tmpa = []
 
@@ -85,9 +85,9 @@ class TwitLookupHandler(webapp.RequestHandler):
 				raise Exception('User does not exist!')
 
 			user = q.get()
-			q = TrackedUserCheckin.all()
+			q = FoursquareCheckin.all()
 			q.filter('foursquare_id =', user.foursquare_id)
-			q.order('-occured')
+			q.order('-occurred')
 
 			if q.count() < 1:
 				self.response.out.write('Datapoints havent been gathered yet.  I need to make a pretty page saying to wait another 5-15 seconds and then refresh.  Its probably done in the time its taken you to read this.')
@@ -108,16 +108,16 @@ class TwitLookupHandler(webapp.RequestHandler):
 class FourSqIdLookupHandler(webapp.RequestHandler):
 	def get(self, fsq_id=None):
 		q = FoursquareAccount.all()
-		q.filter('foursquare_id =', long(fsq_id))
+		q.filter('foursquare_id =', str(fsq_id))
 
 		if q.count() < 1:
 			raise Exception('User does not exist!')
 
 		user = q.get()
 
-		q = TrackedUserCheckin.all()
+		q = FoursquareCheckin.all()
 		q.filter('foursquare_id =', user.foursquare_id)
-		q.order('-occured')
+		q.order('-occurred')
 
 		datapts = []
 		for checkin in q.fetch(100):
@@ -189,7 +189,7 @@ class DataHandler(webapp.RequestHandler):
 			if user is None:
 				return
 
-			checkins = TrackedUserCheckin.all()
+			checkins = FoursquareCheckin.all()
 			checkins.filter('foursquare_id =', user.foursquare_id)
 
 			if checkins.count() == 0:
@@ -198,7 +198,7 @@ class DataHandler(webapp.RequestHandler):
 			for checkin in checkins:
 				info = {}
 				info['location'] = str(checkin.location)
-				info['occurred'] = str(checkin.occured)
+				info['occurred'] = str(checkin.occurred)
 				data.append(info)
 
 			data.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['occurred'], '%Y-%m-%d %H:%M:%S'),
@@ -268,7 +268,7 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 		userinfo = simplejson.loads(content)
 
 		q = FoursquareAccount.all()
-		q.filter('foursquare_id = ', userinfo['user']['id'])
+		q.filter('foursquare_id = ', str(userinfo['user']['id']))
 
 		if q.count() > 0:
 			raise Exception('User is already authorized!')
@@ -281,7 +281,7 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 		if userinfo['user'].has_key('twitter'):
 			tuser.twitter_username = userinfo['user']['twitter']
 
-		tuser.foursquare_id = userinfo['user']['id']
+		tuser.foursquare_id = str(userinfo['user']['id'])
 
 		user = users.get_current_user()
 		if user is not None:
