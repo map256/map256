@@ -80,3 +80,16 @@ class FoursquareCheckin(Checkin):
 	owner = db.ReferenceProperty(FoursquareAccount)
 	checkin_id = db.StringProperty()
 	foursquare_id = db.StringProperty()
+
+class TwitterAccount(db.Model):
+	access_key = db.StringProperty()
+	access_secret = db.StringProperty()
+	screen_name = db.StringProperty()
+	twitter_id = db.StringProperty()
+	created = db.DateTimeProperty(auto_now_add=True)
+	disabled = db.BooleanProperty(default=False)
+	account = db.ReferenceProperty(Account)
+
+class TwitterCheckin(Checkin):
+	owner = db.ReferenceProperty(TwitterAccount)
+	tweet_id = db.StringProperty()

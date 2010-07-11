@@ -7,6 +7,7 @@
 	</head>
 	<body>
 		<h1><a href="/">map256</a>: Profile</h1>
+		<p>{{ nickname }}</p>
 		<hr>
 		<h2>Foursquare Accounts:</h2>
 		<ul>
@@ -20,6 +21,14 @@
 		</ul>
 		<p><a href="/foursquare_authorization">Add a foursquare account</a></p>
 		<hr>
+		<h2>Twitter Accounts:</h2>
+		<ul>
+{% for twitter_account in twitter_accounts %}
+			<li><a href="/t/{{ twitter_account.screen_name}}">{{ twitter_account.screen_name}}</a> (<a href="/twitter_account_delete?twitter_id={{ twitter_account.twitter_id }}">delete</a>)</li>
+{% endfor %}
+				</ul>
+				<p><a href="/twitter_authorization">Add a Twitter account</a></p>
+				<hr>
 		<p><a href="{{ signout_url }}">Sign out</a></p>
 		<p>Comments, questions, concerns?  Check out the <a href="/faq.html">FAQ</a></p>
 	</body>

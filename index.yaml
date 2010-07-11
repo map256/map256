@@ -31,6 +31,13 @@ indexes:
   - name: occurred
     direction: desc
 
+- kind: Checkin
+  properties:
+  - name: class
+  - name: owner
+  - name: tweet_id
+    direction: desc
+
 - kind: GeneratedStatistic
   properties:
   - name: description

@@ -26,6 +26,8 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 from google.appengine.api.labs import taskqueue
 
+import logging
+
 from m256_cfg import *
 from models import *
 
@@ -44,6 +46,26 @@ class FoursquareHistoryDispatcher(webapp.RequestHandler):
 				latest = q.get()
 				taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': user.foursquare_id, 'since': latest.checkin_id }, method='GET')
 
+class TwitterHistoryDispatcher(webapp.RequestHandler):
+	def get(self):
+		q1 = TwitterAccount.all()
+		q1.filter('disabled =', False)
+
+		for user in q1:
+			params = {}
+			params['twitter_id'] = user.twitter_id
+
+			q2 = TwitterCheckin.all()
+			q2.filter('owner =', user)
+			q2.order('-tweet_id')
+
+			if q2.count() != 0:
+				latest = q2.get()
+				params['since'] = latest.tweet_id
+
+			logging.info('Enqueing task worker_twitter_history with params %s<br>' % params)
+			taskqueue.add(url='/worker_twitter_history', params=params, method='GET')
+
 class StatisticsDispatcher(webapp.RequestHandler):
 	def get(self):
 		periods = ('week', 'month', 'alltime')
@@ -55,6 +77,7 @@ class StatisticsDispatcher(webapp.RequestHandler):
 
 def main():
 	application = webapp.WSGIApplication([('/cron_foursquare_history', FoursquareHistoryDispatcher),
+										  ('/cron_twitter_history', TwitterHistoryDispatcher),
 										  ('/cron_statistics', StatisticsDispatcher)],
 		                                  debug=True)
 

@@ -52,6 +52,7 @@ import math
 
 from m256_cfg import *
 from models import *
+import m256
 
 class FoursquareHistoryWorker(webapp.RequestHandler):
 	def get(self, fsq_id=None, since=None):
@@ -165,6 +166,51 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 
 				ci.put()
 
+class TwitterHistoryWorker(webapp.RequestHandler):
+	def get(self):
+		twitter_id = str(self.request.get('twitter_id'))
+
+		q1 = TwitterAccount.all()
+		q1.filter('twitter_id = ', twitter_id)
+
+		if q1.count() != 1:
+			raise Exception('User does not exist')
+
+		t_acct = q1.get()
+
+		if self.request.get('since'):
+			since = self.request.get('since')
+			request_url = twitter_user_timeline_url+'?count=200&since_id='+since
+		elif self.request.get('before'):
+			before = self.request.get('before')
+			request_url = twitter_user_timeline_url+'?count=200&max_id='+before
+		else:
+			request_url = twitter_user_timeline_url+'?count=200'
+
+		self.response.out.write('Using request URL: %s<br>' % request_url)
+		content = m256.twitter_token_request(request_url, 'GET', t_acct.access_key, t_acct.access_secret)
+		history = simplejson.loads(content)
+
+		for tweet in history:
+			if tweet['geo'] is not None:
+				self.response.out.write('Found geo tweet, ID# %s<br>' % tweet['id'])
+				q2 = TwitterCheckin.all()
+				q2.filter('tweet_id = ', tweet['id'])
+
+				if q2.count() == 0:
+					self.response.out.write('Dont have existing record, going to create new checkin<br>')
+					ci = TwitterCheckin()
+					ci.owner = t_acct
+					ci.location = str(tweet['geo']['coordinates'][0])+','+str(tweet['geo']['coordinates'][1])
+					ci.tweet_id = str(tweet['id'])
+					ci.occurred = datetime.datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
+					ci.put()
+
+		if len(history) > 1:
+			last_id = history[len(history)-1]['id']
+			self.response.out.write('Have more than one tweet, enqueing at last_id: %s' % last_id)
+			taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'before': last_id }, method='GET')
+
 class StatisticsWorker(webapp.RequestHandler):
 	def get(self, kind=None, period=None):
 		kind = self.request.get('kind')
@@ -235,6 +281,7 @@ class StatisticsWorker(webapp.RequestHandler):
 
 def main():
 	application = webapp.WSGIApplication([('/worker_foursquare_history', FoursquareHistoryWorker),
+										  ('/worker_twitter_history', TwitterHistoryWorker),
 										  ('/worker_statistics', StatisticsWorker)],
 		                                  debug=True)
 

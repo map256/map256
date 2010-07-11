@@ -29,6 +29,7 @@ import cgi
 import os
 import sys
 import datetime
+import logging
 
 from google.appengine.ext.webapp import template
 from google.appengine.api import memcache
@@ -162,6 +163,10 @@ class ProfileHandler(webapp.RequestHandler):
 		tusers.filter('account =', acc)
 		template_values['tusers'] = tusers.fetch(50)
 
+		q2 = TwitterAccount.all()
+		q2.filter('account =', acc)
+		template_values['twitter_accounts'] = q2.fetch(50)
+
 		template_values['nickname'] = user.nickname()
 
 		m256.output_template(self, 'templates/profile.tmpl', template_values)
@@ -235,7 +240,7 @@ class FoursquareAuthorizationHandler(webapp.RequestHandler):
 			return
 		else:
 			url = authorize_url+'?oauth_token='+request_token['oauth_token']
-			m256.output_template(self, 'templates/authorize.tmpl', {'url': url})
+			m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Foursquare'})
 
 class FoursquareCallbackHandler(webapp.RequestHandler):
 	def get(self):
@@ -253,9 +258,6 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 		access_token = dict(cgi.parse_qsl(content))
 
 		content = m256.foursquare_token_request(userdetail_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
-
-		db.delete(req)
-		#FIXME: Is there any scenario in which a request key, once approved, should be kept around?
 
 		#FIXME: Saw an odd bug one time where access token was requested, approved, but timed out before response was given
 		#Dunno how to handle it just yet, but putting it in here before I forget
@@ -348,7 +350,78 @@ class FoursquareAccountDeleteHandler(webapp.RequestHandler):
 			for ci in r2:
 				ci.delete()
 
-		m256.output_template(self, 'templates/fsq_deleted.tmpl', {'sign_out_url': users.create_logout_url('/')})
+		m256.output_template(self, 'templates/fsq_deleted.tmpl')
+
+class TwitterAuthorizationHandler(webapp.RequestHandler):
+	def get(self):
+		result = m256.twitter_consumer_request(twitter_request_token_url, 'POST')
+		request_token = dict(cgi.parse_qsl(result))
+
+		#FIXME: Should check to see if keys exist here (aka did we get a well formed response)
+		req = OauthRequest()
+		req.request_key = request_token['oauth_token']
+		req.request_secret = request_token['oauth_token_secret']
+		req.put()
+
+		url = twitter_authorize_url+'?oauth_token='+request_token['oauth_token']
+		m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Twitter'})
+
+class TwitterCallbackHandler(webapp.RequestHandler):
+	def get(self):
+		arg = self.request.get('oauth_token')
+		q1 = OauthRequest.all()
+		q1.filter('request_key = ', arg)
+
+		if q1.count() < 1:
+			raise Exception('Invalid request (key does not exist)')
+
+		req = q1.get()
+
+		content = m256.twitter_token_request(twitter_access_token_url, 'POST', req.request_key, req.request_secret)
+		access_token = dict(cgi.parse_qsl(content))
+
+		content = m256.twitter_token_request(twitter_user_timeline_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
+		userinfo = simplejson.loads(content)
+
+		q2 = TwitterAccount.all()
+		q2.filter('twitter_id =', str(userinfo[0]['user']['id']))
+
+		if q2.count() != 0:
+			raise Exception('Twitter account is already authorized!')
+
+		new_account = TwitterAccount()
+		new_account.access_key = access_token['oauth_token']
+		new_account.access_secret = access_token['oauth_token_secret']
+		new_account.twitter_id = str(userinfo[0]['user']['id'])
+		new_account.screen_name = str(userinfo[0]['user']['screen_name'])
+		new_account.account = m256.get_user_model()
+		new_account.put()
+
+		taskqueue.add(url='/worker_twitter_history', params={'twitter_id': new_account.twitter_id}, method='GET')
+
+		url = '/t/'+new_account.screen_name
+		m256.output_template(self, 'templates/callback.tmpl', {'map_url': url})
+		m256.notify_admin("New Twitter account added: http://www.map256.com/t/%s" % new_account.screen_name)
+
+class TwitterAccountDeleteHandler(webapp.RequestHandler):
+	def get(self):
+		twitter_id = str(self.request.get('twitter_id'))
+		u_acc = m256.get_user_model()
+
+		q1 = TwitterAccount.all()
+		q1.filter('twitter_id =', twitter_id)
+		q1.filter('account =', u_acc)
+
+		if q1.count() != 0:
+			r1 = q1.fetch(50)
+
+			for twitter_account in r1:
+				q2 = TwitterCheckin.all(keys_only=True)
+				q2.filter('owner =', twitter_account)
+				db.delete(q2.fetch(1000)) #FIXME: Won't delete all
+				twitter_account.delete()
+
+		m256.output_template(self, 'templates/account_deleted.tmpl')
 
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
@@ -357,6 +430,9 @@ def main():
 										 ('/foursquare_authorization', FoursquareAuthorizationHandler),
 										 ('/foursquare_callback', FoursquareCallbackHandler),
 										 ('/foursquare_account_delete', FoursquareAccountDeleteHandler),
+										 ('/twitter_authorization', TwitterAuthorizationHandler),
+										 ('/twitter_callback', TwitterCallbackHandler),
+										 ('/twitter_account_delete', TwitterAccountDeleteHandler),
 										 ('/data/(.*)', DataHandler),
 										 ('/t/(.*)', TwitLookupHandler),
 										 ('/f/(.*)', FourSqIdLookupHandler)],
