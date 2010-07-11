@@ -14,7 +14,7 @@ import oauth2 as oauth
 from google.appengine.ext.webapp import template
 from google.appengine.api import users
 from google.appengine.api import mail
-
+from google.appengine.api import memcache
 
 def foursquare_consumer_request(url, method):
 	consumer = oauth.Consumer(consumer_key, consumer_secret)
@@ -109,3 +109,17 @@ def notify_admin(body):
 	               to='Eric Sigler <esigler@gmail.com>',
 	               subject='Map256 Admin Notification',
 	               body=body)
+
+def rate_limit_check():
+	req_ip = memcache.get('iprate_'+self.request.remote_addr)
+
+	if req_ip is None:
+		req_ip = 1
+		memcache.add('iprate_'+self.request.remote_addr, req_ip, 120)
+	else:
+		req_ip = req_ip+1
+		memcache.replace('iprate_'+self.request.remote_addr, req_ip, 120)
+
+	if req_ip > 10:
+		self.response.out.write('Rate limiter kicked in, /authorize blocked for 120 seconds')
+		return
