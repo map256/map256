@@ -28,6 +28,13 @@ indexes:
   properties:
   - name: class
   - name: owner
+  - name: checkin_id
+    direction: desc
+
+- kind: Checkin
+  properties:
+  - name: class
+  - name: owner
   - name: occurred
     direction: desc
 

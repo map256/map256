@@ -3,10 +3,10 @@ cron:
   url: /cron_foursquare_history
   schedule: every 5 minutes
 
-- description: Twitter history retrieval job
-  url: /cron_foursquare_history
-  schedule: every 5 minutes
+#- description: Twitter history retrieval job
+#  url: /cron_twitter_history
+#  schedule: every 5 minutes
 
-- description: Statistics generation
-  url: /cron_statistics
-  schedule: every 1 hours
+#- description: Statistics generation
+#  url: /cron_statistics
+#  schedule: every 1 hours
