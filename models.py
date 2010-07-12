@@ -33,25 +33,6 @@ class OauthRequest(db.Model):
 	request_key = db.StringProperty()
 	request_secret = db.StringProperty()
 	created = db.DateTimeProperty(auto_now_add=True)
-	
-class TrackedUser(db.Model):
-	access_key = db.StringProperty()
-	access_secret = db.StringProperty()
-	twitter_username = db.StringProperty()
-	foursquare_id = db.IntegerProperty()
-	created = db.DateTimeProperty(auto_now_add=True)
-	foursquare_disabled = db.BooleanProperty(default=False)
-	account = db.ReferenceProperty(Account)
-
-class TrackedUserCheckin(db.Model):
-	foursquare_id = db.IntegerProperty()
-	location = db.GeoPtProperty()
-	occured = db.DateTimeProperty()
-	checkin_id = db.IntegerProperty()
-	created = db.DateTimeProperty(auto_now_add=True)
-	distance_traveled = db.FloatProperty() #stored in kilometers
-	velocity = db.FloatProperty() #stored in km/s
-	previous_checkin = db.SelfReferenceProperty()
 
 class GeneratedStatistic(db.Model):
 	created = db.DateTimeProperty(auto_now_add=True)
