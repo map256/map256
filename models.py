@@ -75,6 +75,7 @@ class Checkin(polymodel.PolyModel):
 	distance_traveled = db.FloatProperty() #stored in kilometers
 	velocity = db.FloatProperty() #stored in km/s
 	previous_checkin = db.SelfReferenceProperty()
+	account_owner = db.ReferenceProperty(Account)
 
 class FoursquareCheckin(Checkin):
 	owner = db.ReferenceProperty(FoursquareAccount)

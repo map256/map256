@@ -14,10 +14,10 @@ handlers:
 - url: /f/(.*)
   script: app.py
 
-- url: /scoreboard
+- url: /data/(.*)
   script: app.py
 
-- url: /data/(.*)
+- url: /scoreboard
   script: app.py
 
 - url: /profile

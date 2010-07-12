@@ -164,6 +164,8 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 				else:
 					ci.velocity = 0.0
 
+				ci.account_owner = user.account
+
 				ci.put()
 
 class TwitterHistoryWorker(webapp.RequestHandler):
@@ -204,6 +206,7 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 					ci.location = str(tweet['geo']['coordinates'][0])+','+str(tweet['geo']['coordinates'][1])
 					ci.tweet_id = str(tweet['id'])
 					ci.occurred = datetime.datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
+					ci.account_owner = t_acct.account
 					ci.put()
 
 		if len(history) > 1:

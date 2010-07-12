@@ -73,59 +73,58 @@ class MainHandler(webapp.RequestHandler):
 
 		m256.output_template(self, 'templates/front.tmpl', {'blob': blob})
 
-class TwitLookupHandler(webapp.RequestHandler):
-	def get(self, username=None):
-		datapts = memcache.get('datapts_'+username)
+class LookupHandler(webapp.RequestHandler):
+	def get(self, handle=None):
+		if handle is None:
+			return
 
-		if datapts is None:
-			q = FoursquareAccount.all()
-			q.filter('twitter_username = ', username)
+		cached = memcache.get('lookup_'+handle)
 
-			if q.count() < 1:
-				raise Exception('User does not exist!')
+		if cached is not None:
+			m256.output_template(self, 'templates/map.tmpl', {'account_key': cached})
+			return
 
-			user = q.get()
-			q = FoursquareCheckin.all()
-			q.filter('owner =', user)
-			q.order('-occurred')
+		q1 = FoursquareAccount.all()
+		q1.filter('twitter_username =', str(handle))
 
-			if q.count() < 1:
-				self.response.out.write('Datapoints havent been gathered yet.  I need to make a pretty page saying to wait another 5-15 seconds and then refresh.  Its probably done in the time its taken you to read this.')
-				return
+		if q1.count() == 1:
+			f_account = q1.get()
+			key = f_account.account.key()
+			m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
+			memcache.add('lookup_'+handle, key, 5)
+			return
 
-			datapts = []
+		q2 = FoursquareAccount.all()
+		q2.filter('foursquare_id =', str(handle))
 
-			for checkin in q.fetch(100):
-				datapts.append( checkin.location )
+		if q2.count() == 1:
+			f_account = q2.get()
+			key = f_account.account.key()
+			m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
+			memcache.add('lookup_'+handle, key, 5)
+			return
 
-			memcache.add('datapts_'+username, datapts, 300)
+		q3 = TwitterAccount.all()
+		q3.filter('screen_name =', str(handle))
 
-		m256.output_template(self, 'templates/map.tmpl', {'datapoints': datapts, 'centerpt': datapts[0] })
+		if q3.count() == 1:
+			t_account = q3.get()
+			key = t_account.account.key()
+			m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
+			memcache.add('lookup_'+handle, key, 5)
+			return
 
-class FourSqIdLookupHandler(webapp.RequestHandler):
-	def get(self, fsq_id=None):
-		q = FoursquareAccount.all()
-		q.filter('foursquare_id =', str(fsq_id))
+		q4 = TwitterAccount.all()
+		q4.filter('twitter_id =', str(handle))
 
-		if q.count() < 1:
-			raise Exception('User does not exist!')
+		if q4.count() == 1:
+			t_account = q4.get()
+			key = t_account.account.key()
+			m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
+			memcache.add('lookup_'+handle, key, 5)
+			return
 
-		user = q.get()
-
-		q = FoursquareCheckin.all()
-		q.filter('owner =', user)
-		q.order('-occurred')
-
-		datapts = []
-		for checkin in q.fetch(100):
-			datapts.append( checkin.location )
-
-		if len(datapts) > 0:
-			centerpt = datapts[0]
-		else:
-			centerpt = '37.9523113,-91.7715052'
-
-		m256.output_template(self, 'templates/map.tmpl', {'datapoints': datapts, 'centerpt': centerpt })
+		self.response.out.write('Sorry, but I cant find a matching user')
 
 class ScoreboardHandler(webapp.RequestHandler):
 	def get(self):
@@ -174,7 +173,6 @@ class ProfileHandler(webapp.RequestHandler):
 class DataHandler(webapp.RequestHandler):
 	def get(self, key=None):
 		data = memcache.get('checkindata_'+key)
-		self.response.headers.add_header('Content-Type', 'application/json')
 
 		if data is None:
 			data = []
@@ -182,17 +180,20 @@ class DataHandler(webapp.RequestHandler):
 			try:
 				k1 = db.Key(key)
 			except:
+				self.response.out.write('A')
 				return
 
-			user = FoursquareAccount.get(k1)
+			user = Account.get(k1)
 
 			if user is None:
+				self.response.out.write('B')
 				return
 
-			checkins = FoursquareCheckin.all()
-			checkins.filter('owner =', user)
+			checkins = Checkin.all()
+			checkins.filter('account_owner =', user)
 
 			if checkins.count() == 0:
+				self.response.out.write('C')
 				return
 
 			for checkin in checkins:
@@ -202,11 +203,12 @@ class DataHandler(webapp.RequestHandler):
 				data.append(info)
 
 			data.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['occurred'], '%Y-%m-%d %H:%M:%S'),
-			                              datetime.datetime.strptime(y['occurred'], '%Y-%m-%d %H:%M:%S')))
+			                              datetime.datetime.strptime(y['occurred'], '%Y-%m-%d %H:%M:%S')), reverse=True)
 
 			encoded = simplejson.dumps(data)
-			memcache.add('checkindata_'+key, encoded, 60)
-			self.response.out.write(encoded)
+			wrapped = 'var checkin_data = json_parse(\''+encoded+'\')'
+			memcache.add('checkindata_'+key, wrapped, 60)
+			self.response.out.write(wrapped)
 		else:
 			self.response.out.write(data)
 
@@ -293,7 +295,7 @@ class FoursquareAccountDeleteHandler(webapp.RequestHandler):
 			for ci in r2:
 				ci.delete()
 
-		m256.output_template(self, 'templates/fsq_deleted.tmpl')
+		m256.output_template(self, 'templates/account_deleted.tmpl')
 
 class TwitterAuthorizationHandler(webapp.RequestHandler):
 	def get(self):
@@ -377,8 +379,8 @@ def main():
 										 ('/twitter_callback', TwitterCallbackHandler),
 										 ('/twitter_account_delete', TwitterAccountDeleteHandler),
 										 ('/data/(.*)', DataHandler),
-										 ('/t/(.*)', TwitLookupHandler),
-										 ('/f/(.*)', FourSqIdLookupHandler)],
+										 ('/t/(.*)', LookupHandler),
+										 ('/f/(.*)', LookupHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 

@@ -116,10 +116,13 @@ function initialize() {
 
 	var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
-	for (var i=1; i<=checkinPath.length; i++) {
-		if (checkinPath[i-1] != checkinPath[i]) {
+	for (var i=1; i<checkin_data.length; i++) {
+		if (checkin_data[i-1]['location'] != checkin_data[i]['location']) {
+			var foo_a = checkin_data[i-1]['location'].split(",");
+			var foo_b = checkin_data[i]['location'].split(",");
+
 			lines.push(new google.maps.Polyline({
-				path: new Array(checkinPath[i-1], checkinPath[i]),
+				path: new Array(new google.maps.LatLng(foo_a[0], foo_a[1]), new google.maps.LatLng(foo_b[0], foo_b[1])),
 				strokeColor: "#000000",
 				strokeOpacity: 1.0,
 				strokeWeight: 2
@@ -127,9 +130,10 @@ function initialize() {
 		}
 	}
 
-	for (var y in checkinPath) {
+	for (var y in checkin_data) {
+		var foo_a = checkin_data[y]['location'].split(",");
 		markers.push(new google.maps.Marker({
-			position: checkinPath[y],
+			position: new google.maps.LatLng(foo_a[0], foo_a[1]),
 			map: map,
 			visible: false
 		}));
