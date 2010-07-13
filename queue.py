@@ -29,6 +29,7 @@ import cgi
 import os
 import sys
 import datetime
+import logging
 
 from google.appengine.api.labs import taskqueue
 from google.appengine.api import memcache
@@ -170,6 +171,7 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 
 class TwitterHistoryWorker(webapp.RequestHandler):
 	def get(self):
+		logging.info('Handling Twitter history request')
 		twitter_id = str(self.request.get('twitter_id'))
 
 		q1 = TwitterAccount.all()
@@ -182,25 +184,25 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 
 		if self.request.get('since'):
 			since = self.request.get('since')
-			request_url = twitter_user_timeline_url+'?count=200&since_id='+since
+			request_url = m256.twitter_user_timeline_url+'?count=200&since_id='+since
 		elif self.request.get('before'):
 			before = self.request.get('before')
-			request_url = twitter_user_timeline_url+'?count=200&max_id='+before
+			request_url = m256.twitter_user_timeline_url+'?count=200&max_id='+before
 		else:
-			request_url = twitter_user_timeline_url+'?count=200'
+			request_url = m256.twitter_user_timeline_url+'?count=200'
 
-		self.response.out.write('Using request URL: %s<br>' % request_url)
+		logging.info('Using request URL: %s' % request_url)
 		content = m256.twitter_token_request(request_url, 'GET', t_acct.access_key, t_acct.access_secret)
 		history = simplejson.loads(content)
 
 		for tweet in history:
 			if tweet['geo'] is not None:
-				self.response.out.write('Found geo tweet, ID# %s<br>' % tweet['id'])
+				logging.info('Found geo tweet, ID# %s' % tweet['id'])
 				q2 = TwitterCheckin.all()
-				q2.filter('tweet_id = ', tweet['id'])
+				q2.filter('tweet_id = ', str(tweet['id']))
 
 				if q2.count() == 0:
-					self.response.out.write('Dont have existing record, going to create new checkin<br>')
+					logging.info('Dont have existing record, going to create new checkin')
 					ci = TwitterCheckin()
 					ci.owner = t_acct
 					ci.location = str(tweet['geo']['coordinates'][0])+','+str(tweet['geo']['coordinates'][1])
@@ -211,7 +213,7 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 
 		if len(history) > 1:
 			last_id = history[len(history)-1]['id']
-			self.response.out.write('Have more than one tweet, enqueing at last_id: %s' % last_id)
+			logging.info('Have more than one tweet, enqueing at last_id: %s' % last_id)
 			taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'before': last_id }, method='GET')
 
 class StatisticsWorker(webapp.RequestHandler):

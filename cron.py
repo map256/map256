@@ -48,7 +48,7 @@ class FoursquareHistoryDispatcher(webapp.RequestHandler):
 				latest = q2.get()
 				params['since'] = latest.checkin_id
 			else:
-				params['since'] = 0
+				params['since'] = 1
 
 			logging.info('Enqueing task worker_foursquare_history with params %s' % params)
 			taskqueue.add(url='/worker_foursquare_history', params=params, method='GET')
@@ -69,8 +69,6 @@ class TwitterHistoryDispatcher(webapp.RequestHandler):
 			if q2.count() != 0:
 				latest = q2.get()
 				params['since'] = latest.tweet_id
-			else:
-				params['since'] = 0
 
 			logging.info('Enqueing task worker_twitter_history with params %s' % params)
 			taskqueue.add(url='/worker_twitter_history', params=params, method='GET')
