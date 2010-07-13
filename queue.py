@@ -57,61 +57,25 @@ import m256
 
 class FoursquareHistoryWorker(webapp.RequestHandler):
 	def get(self, fsq_id=None, since=None):
+		logging.info('Handling Foursquare history request')
 		fsq_id = self.request.get('fsq_id')
 
-		q = FoursquareAccount.all()
-		q.filter('foursquare_id = ', str(fsq_id))
+		q1 = FoursquareAccount.all()
+		q1.filter('foursquare_id = ', str(fsq_id))
 
-		if q.count() != 1:
+		if q1.count() != 1:
 			raise Exception('User does not exist')
 
-		user = q.get()
-
-		consumer = oauth.Consumer(consumer_key, consumer_secret)
-		token = oauth.Token(user.access_key, user.access_secret)
-		client = oauth.Client(consumer, token)
-		headers = {'User-Agent': 'map256.com:20100617'}
+		fsq_account = q1.get()
 
 		if self.request.get('since'):
 			since = self.request.get('since')
-			url_to_fetch = history_url+'?l=250&sinceid='+since
+			request_url = m256.foursquare_history_url+'?l=250&sinceid='+since
 		else:
-			url_to_fetch = history_url+'?l=250'
+			request_url = m256.foursquare_history_url+'?l=250&sinceid=1'
 
-		try:
-			resp, content = client.request(url_to_fetch, 'GET', headers=headers)
-		except urlfetch.Error:
-			recent = memcache.get('urlfetch_count')
-
-			if recent is None:
-				memcache.add('urlfetch_count', 1, 150)
-			else:
-				recent = recent + 1
-				memcache.replace('urlfetch_count', recent, 150)
-
-			if recent > 10:
-				mail.send_mail(sender='Map256 <service@map256.com', to='Eric Sigler <esigler@gmail.com>', subject='Map256 Foursquare Errors', body='High error rate on FSQ fetches')
-
-			return
-
-		if resp.status == 403:
-			recent = memcache.get('fsq_403_'+fsq_id)
-
-			if recent is None:
-				memcache.add('fsq_403_'+fsq_id, 1, 3600)
-			else:
-				memcache.replace('fsq_403_'+fsq_id, recent+1, 3600)
-
-			if recent > 10:
-				user.foursquare_disabled = True
-				user.put()
-				mail.send_mail(sender='Map256 <service@map256.com', to='Eric Sigler <esigler@gmail.com>', subject='Map256 Foursquare 403 error', body='High 403 rate on %s user' % fsq_id )
-
-			return
-
-		if resp.status != 200:
-			raise Exception('Invalid response %s.' % resp['status'])
-
+		logging.info('Using request URL: %s' % request_url)
+		content = m256.foursquare_token_request(request_url, 'GET', fsq_account.access_key, fsq_account.access_secret)
 		history = simplejson.loads(content)
 
 		checkins = history['checkins']
@@ -119,55 +83,24 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 
 		for checkin in checkins:
 			q2 = FoursquareCheckin.all()
-			q2.filter('checkin_id = ', checkin['id'])
+			q2.filter('checkin_id = ', str(checkin['id']))
 
 			if q2.count() == 0:
+				logging.info('Dont have existing record, going to create new checkin')
 				ci = FoursquareCheckin()
 				ci.foursquare_id = str(fsq_id)
+				ci.owner = fsq_account
 				ci.location = str(checkin['venue']['geolat'])+','+str(checkin['venue']['geolong'])
 				ci.checkin_id = str(checkin['id'])
 				ci.occurred = datetime.datetime.strptime(checkin['created'], '%a, %d %b %y %H:%M:%S +0000')
-
-				q3 = FoursquareCheckin.all()
-				q3.filter('foursquare_id = ', ci.foursquare_id)
-				q3.order('-occurred')
-				prev = q3.get()
-
-				if prev is None:
-					ci.put()
-					ci.previous_checkin = ci
-				else:
-					ci.previous_checkin = prev
-
-				ci.owner = user
-
-				#Using Spherical Law of Cosines to determine distance
-				lon1 = ci.previous_checkin.location.lon
-				lon2 = ci.location.lon
-				lat1 = ci.previous_checkin.location.lat
-				lat2 = ci.location.lat
-
-				delta = lon2 - lon1
-				a = math.radians(lat1)
-				b = math.radians(lat2)
-				c = math.radians(delta)
-				x = math.sin(a) * math.sin(b) + math.cos(a) * math.cos(b) * math.cos(c)
-				distance = math.acos(x)
-				distance = math.degrees(distance)
-				distance = distance * 60
-				distance = distance * 1.852 #to kilometer
-
-				ci.distance_traveled = distance
-				td = ci.occurred - ci.previous_checkin.occurred
-
-				if distance != 0:
-					ci.velocity = distance / td.seconds
-				else:
-					ci.velocity = 0.0
-
-				ci.account_owner = user.account
-
+				ci.account_owner = fsq_account.account
 				ci.put()
+
+		if len(history['checkins']) > 1:
+			last = len(history['checkins'])-1
+			last_id = history['checkins'][last]['id']
+			logging.info('Have more than one checkin, enqueing at last_id: %s' % last_id)
+			taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': fsq_account.foursquare_id, 'since': last_id }, method='GET')
 
 class TwitterHistoryWorker(webapp.RequestHandler):
 	def get(self):

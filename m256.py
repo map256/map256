@@ -20,6 +20,7 @@ foursquare_request_token_url = 'http://foursquare.com/oauth/request_token'
 foursquare_access_token_url = 'http://foursquare.com/oauth/access_token'
 foursquare_authorize_url = 'http://foursquare.com/oauth/authorize'
 foursquare_userdetail_url = 'http://api.foursquare.com/v1/user.json'
+foursquare_history_url = 'http://api.foursquare.com/v1/history.json'
 
 twitter_request_token_url = 'https://api.twitter.com/oauth/request_token'
 twitter_access_token_url = 'https://api.twitter.com/oauth/access_token'
@@ -143,16 +144,55 @@ def output_maintenance(app):
 	path = os.path.join(os.path.dirname(__file__), 'templates/maintenance.tmpl')
 	app.response.out.write(template.render(path, {}))
 
-def rate_limit_check():
-	req_ip = memcache.get('iprate_'+self.request.remote_addr)
+#def rate_limit_check():
+	#req_ip = memcache.get('iprate_'+self.request.remote_addr)
 
-	if req_ip is None:
-		req_ip = 1
-		memcache.add('iprate_'+self.request.remote_addr, req_ip, 120)
-	else:
-		req_ip = req_ip+1
-		memcache.replace('iprate_'+self.request.remote_addr, req_ip, 120)
+	#if req_ip is None:
+		#req_ip = 1
+		#memcache.add('iprate_'+self.request.remote_addr, req_ip, 120)
+	#else:
+		#req_ip = req_ip+1
+		#memcache.replace('iprate_'+self.request.remote_addr, req_ip, 120)
 
-	if req_ip > 10:
-		self.response.out.write('Rate limiter kicked in, /authorize blocked for 120 seconds')
-		return
+	#if req_ip > 10:
+		#self.response.out.write('Rate limiter kicked in, /authorize blocked for 120 seconds')
+		#return
+
+		#consumer = oauth.Consumer(consumer_key, consumer_secret)
+		#token = oauth.Token(user.access_key, user.access_secret)
+		#client = oauth.Client(consumer, token)
+		#headers = {'User-Agent': 'map256.com:20100617'}
+
+		#try:
+			#resp, content = client.request(url_to_fetch, 'GET', headers=headers)
+		#except urlfetch.Error:
+			#recent = memcache.get('urlfetch_count')
+
+			#if recent is None:
+				#memcache.add('urlfetch_count', 1, 150)
+			#else:
+				#recent = recent + 1
+				#memcache.replace('urlfetch_count', recent, 150)
+
+			#if recent > 10:
+				#mail.send_mail(sender='Map256 <service@map256.com', to='Eric Sigler <esigler@gmail.com>', subject='Map256 Foursquare Errors', body='High error rate on FSQ fetches')
+
+			#return
+
+		#if resp.status == 403:
+			#recent = memcache.get('fsq_403_'+fsq_id)
+
+			#if recent is None:
+				#memcache.add('fsq_403_'+fsq_id, 1, 3600)
+			#else:
+				#memcache.replace('fsq_403_'+fsq_id, recent+1, 3600)
+
+			#if recent > 10:
+				#user.foursquare_disabled = True
+				#user.put()
+				#mail.send_mail(sender='Map256 <service@map256.com', to='Eric Sigler <esigler@gmail.com>', subject='Map256 Foursquare 403 error', body='High 403 rate on %s user' % fsq_id )
+
+			#return
+
+		#if resp.status != 200:
+			#raise Exception('Invalid response %s.' % resp['status'])

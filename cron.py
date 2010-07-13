@@ -22,13 +22,12 @@
 # THE SOFTWARE.
 #
 
+import logging
+
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 from google.appengine.api.labs import taskqueue
 
-import logging
-
-from m256_cfg import *
 from models import *
 
 class FoursquareHistoryDispatcher(webapp.RequestHandler):
@@ -44,11 +43,9 @@ class FoursquareHistoryDispatcher(webapp.RequestHandler):
 			q2.filter('owner = ', user)
 			q2.order('-checkin_id')
 
-			if q.count() != 0:
+			if q2.count() > 0:
 				latest = q2.get()
 				params['since'] = latest.checkin_id
-			else:
-				params['since'] = 1
 
 			logging.info('Enqueing task worker_foursquare_history with params %s' % params)
 			taskqueue.add(url='/worker_foursquare_history', params=params, method='GET')
@@ -66,7 +63,7 @@ class TwitterHistoryDispatcher(webapp.RequestHandler):
 			q2.filter('owner =', user)
 			q2.order('-tweet_id')
 
-			if q2.count() != 0:
+			if q2.count() > 0:
 				latest = q2.get()
 				params['since'] = latest.tweet_id
 
