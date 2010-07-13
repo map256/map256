@@ -203,7 +203,7 @@ class DataHandler(webapp.RequestHandler):
 
 class FoursquareAuthorizationHandler(webapp.RequestHandler):
 	def get(self):
-		content = m256.foursquare_consumer_request(request_token_url, 'GET')
+		content = m256.foursquare_consumer_request(m256.foursquare_request_token_url, 'GET')
 		request_token = dict(cgi.parse_qsl(content))
 
 		req = OauthRequest()

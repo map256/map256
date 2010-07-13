@@ -16,11 +16,16 @@ from google.appengine.api import users
 from google.appengine.api import mail
 from google.appengine.api import memcache
 
-def foursquare_consumer_request(url, method):
+foursquare_request_token_url = 'http://foursquare.com/oauth/request_token'
+
+def oauth_consumer_request(url, method, consumer_key, consumer_secret):
 	consumer = oauth.Consumer(consumer_key, consumer_secret)
 	client = oauth.Client(consumer)
 	headers = {'User-Agent': 'map256.com:20100617'}
-	resp, content = client.request(url, method, headers=headers)
+	return client.request(url, method, headers=headers)
+
+def foursquare_consumer_request(url, method):
+	resp, content = oauth_consumer_request(url, method, foursquare_consumer_key, foursquare_consumer_secret)
 
 	if resp.status != 200:
 		raise Exception('Invalid response %s.' % resp['status'])
