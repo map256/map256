@@ -144,29 +144,18 @@ class ScoreboardHandler(webapp.RequestHandler):
 
 class ProfileHandler(webapp.RequestHandler):
 	def get(self):
-		user = users.get_current_user()
+		account = m256.get_user_model()
 		template_values = {}
 
-		account = Account.all()
-		account.filter('google_user =', user)
-
-		if account.count() == 0:
-			account = Account()
-			account.google_user = user
-			account.put()
-			acc = account
-		else:
-			acc = account.get()
-
 		q1 = FoursquareAccount.all()
-		q1.filter('account =', acc)
+		q1.filter('account =', account)
 		template_values['foursquare_accounts'] = q1.fetch(25)
 
 		q2 = TwitterAccount.all()
-		q2.filter('account =', acc)
+		q2.filter('account =', account)
 		template_values['twitter_accounts'] = q2.fetch(25)
 
-		template_values['nickname'] = user.nickname()
+		template_values['nickname'] = account.google_user.nickname()
 
 		m256.output_template(self, 'templates/profile.tmpl', template_values)
 

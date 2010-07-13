@@ -100,9 +100,13 @@ def get_user_model():
 	account.filter('google_user =', user)
 
 	if account.count() == 0:
-		raise Exception('User has not been created!')
+		account = Account()
+		account.google_user = user
+		account.put()
+	else:
+		account = account.get()
 
-	return account.get()
+	return account
 
 def notify_admin(body):
 	mail.send_mail(sender='Map256 <service@map256.com>',
