@@ -45,35 +45,33 @@ import m256
 from m256_cfg import *
 from models import *
 
-#FIXME: To sanitize
-class MainHandler(webapp.RequestHandler):
+class FrontHandler(webapp.RequestHandler):
     def get(self):
-		blob = memcache.get('frontpage_blob')
+		frontpage_userlist = memcache.get('frontpage_userlist')
 
-		if blob is None:
+		if frontpage_userlist is None:
 
-			users = FoursquareAccount.all()
-			users.filter('foursquare_disabled =', False)
+			q1 = FoursquareAccount.all()
+			q1.filter('foursquare_disabled =', False)
 
-			blob = {}
+			fsq_accounts = {}
 
-			for user in users:
-				if user.twitter_username is not None:
-					q1 = FoursquareCheckin.all()
-					q1.filter('owner = ', user)
-					q1.order('-occurred')
-					r1 = q1.fetch(10)
-					tmpa = []
+			for fsq_account in q1:
+				q2 = FoursquareCheckin.all()
+				q2.filter('owner = ', fsq_account)
+				q2.order('-occurred')
+				r2 = q2.fetch(10)
+				tmpa = []
 
-					for res1 in r1:
-						tmpa.append(str(res1.location))
+				for res2 in r2:
+					tmpa.append(str(res2.location))
 
-					blob[str(user.twitter_username)] = tmpa
+				fsq_accounts[str(fsq_account.foursquare_id)] = tmpa
 
-			blob = simplejson.dumps(blob)
-			memcache.add('frontpage_blob', blob, 300)
+			frontpage_userlist = simplejson.dumps(fsq_accounts)
+			memcache.add('frontpage_userlist', frontpage_userlist, 300)
 
-		m256.output_template(self, 'templates/front.tmpl', {'blob': blob})
+		m256.output_template(self, 'templates/front.tmpl', {'frontpage_userlist': frontpage_userlist})
 
 #FIXME: To sanitize
 class LookupHandler(webapp.RequestHandler):
@@ -432,7 +430,7 @@ class TwitterAccountDeleteHandler(webapp.RequestHandler):
 			self.redirect('/profile')
 
 def main():
-    application = webapp.WSGIApplication([('/', MainHandler),
+    application = webapp.WSGIApplication([('/', FrontHandler),
 										 ('/scoreboard', ScoreboardHandler),
 										 ('/profile', ProfileHandler),
 										 ('/foursquare_authorization', FoursquareAuthorizationHandler),

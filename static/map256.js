@@ -176,11 +176,11 @@ function initialize_front() {
 	var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 	var blarg = new Array();
 
-	for (key in blob2) {
+	for (key in frontpage_userlist) {
 		var path = new Array();
 
-		for (var item in blob2[key]) {
-			var foo = blob2[key][item].split(",");
+		for (var item in frontpage_userlist[key]) {
+			var foo = frontpage_userlist[key][item].split(",");
 			path.push(new google.maps.LatLng(foo[0], foo[1]));
 		}
 
@@ -192,7 +192,7 @@ function initialize_front() {
 			map: map
 		}));
 		
-		var bar = blob2[key][0].split(",");
+		var bar = frontpage_userlist[key][0].split(",");
 
 		markers[key] = new google.maps.Marker({
 			position: new google.maps.LatLng(bar[0], bar[1]),

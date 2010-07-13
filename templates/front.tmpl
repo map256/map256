@@ -6,8 +6,7 @@
 		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 		<script type="text/javascript" src="/json_parse.js"></script>
 		<script type="text/javascript">
-			var blob = '{{ blob }}';
-			var blob2 = json_parse(blob)
+			var frontpage_userlist = json_parse('{{ frontpage_userlist }}')
 		</script>
 		<script type="text/javascript" src="/map256.js"></script>
 	</head>
@@ -20,7 +19,7 @@
 {% if logged_in %}
 			<p>Check out <a href="/profile">your profile</a>, or <a href="{{ signout_url }}">sign out</a>.</p>
 {% else %}
-			<p>Want to get started?  Make sure you have a <a href="http://foursquare.com/">Foursquare</a> account, then <a href="/profile">sign in to Map256</a>.</p>
+			<p>Want to get started plotting your own travels?  Sign in to <a href="/profile">Map256</a> (Google Account login required).</p>
 {% endif %}
 		</div>
 		<script type="text/javascript">
