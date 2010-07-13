@@ -285,7 +285,6 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 		taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': new_account.foursquare_id}, method='GET')
 
 		url = '/f/'+new_account.foursquare_id
-
 		m256.output_template(self, 'templates/callback.tmpl', {'map_url': url})
 		m256.notify_admin("New Foursquare account added: http://www.map256.com/f/%s" % new_account.foursquare_id)
 
@@ -349,21 +348,43 @@ class TwitterCallbackHandler(webapp.RequestHandler):
 		q1.filter('request_key = ', arg)
 
 		if q1.count() < 1:
+			#FIXME: Should be self.redirect('/foursquare_authorization')
 			raise Exception('Invalid request (key does not exist)')
 
 		req = q1.get()
 
-		content = m256.twitter_token_request(twitter_access_token_url, 'POST', req.request_key, req.request_secret)
+		content = m256.twitter_token_request(m256.twitter_access_token_url, 'POST', req.request_key, req.request_secret)
 		access_token = dict(cgi.parse_qsl(content))
 
-		content = m256.twitter_token_request(twitter_user_timeline_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
+		if 'oauth_token' not in access_token:
+			m256.output_error(self, 'Twitter access token response was invalid')
+			return
+
+		if 'oauth_token' not in access_token:
+			m256.output_error(self, 'Twitter access token response was invalid')
+			return
+
+		content = m256.twitter_token_request(m256.twitter_user_timeline_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
 		userinfo = simplejson.loads(content)
+
+		if 'user' not in userinfo[0]:
+			m256.output_error(self, 'Twitter user timeline response was invalid')
+			return
+
+		if 'id' not in userinfo[0]['user']:
+			m256.output_error(self, 'Twitter user timeline response was invalid')
+			return
+
+		if 'screen_name' not in userinfo[0]['user']:
+			m256.output_error(self, 'Twitter user timeline response was invalid')
+			return
 
 		q2 = TwitterAccount.all()
 		q2.filter('twitter_id =', str(userinfo[0]['user']['id']))
 
-		if q2.count() != 0:
-			raise Exception('Twitter account is already authorized!')
+		if q2.count() > 0:
+			self.redirect('/profile')
+			return
 
 		new_account = TwitterAccount()
 		new_account.access_key = access_token['oauth_token']
@@ -371,7 +392,12 @@ class TwitterCallbackHandler(webapp.RequestHandler):
 		new_account.twitter_id = str(userinfo[0]['user']['id'])
 		new_account.screen_name = str(userinfo[0]['user']['screen_name'])
 		new_account.account = m256.get_user_model()
-		new_account.put()
+
+		try:
+			new_account.put()
+		except CapabilityDisabledError:
+			m256.output_maintenance(self)
+			return
 
 		taskqueue.add(url='/worker_twitter_history', params={'twitter_id': new_account.twitter_id}, method='GET')
 
