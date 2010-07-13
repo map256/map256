@@ -291,33 +291,30 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 
 class FoursquareAccountDeleteHandler(webapp.RequestHandler):
 	def get(self):
-		fsq_id = self.request.get('fsq_id')
-		user = users.get_current_user()
-
-		q3 = Account.all()
-		q3.filter('google_user =', user)
-		u_acc = q3.get()
+		fsq_id = str(self.request.get('fsq_id'))
+		u_acc = m256.get_user_model()
 
 		q1 = FoursquareAccount.all()
-		q1.filter('foursquare_id =', str(fsq_id))
+		q1.filter('foursquare_id =', fsq_id)
 		q1.filter('account =', u_acc)
 
 		if q1.count() != 0:
-			r1 = q1.fetch(10)
+			r1 = q1.fetch(50)
 
-			for fsq_acct in r1:
-				fsq_acct.delete()
+			for fsq_account in r1:
+				q2 = FoursquareCheckin.all(keys_only=True)
+				q2.filter('owner =', fsq_account)
 
-		q2 = FoursquareCheckin.all()
-		q2.filter('foursquare_id =', str(fsq_id))
+				try:
+					db.delete(q2.fetch(1000)) #FIXME: Won't delete all
+					fsq_account.delete()
+				except CapabilityDisabledError:
+					m256.output_maintenance(self)
+					return
 
-		if q2.count() != 0:
-			r2 = q2.fetch(1000)
-
-			for ci in r2:
-				ci.delete()
-
-		m256.output_template(self, 'templates/account_deleted.tmpl')
+			m256.output_template(self, 'templates/account_deleted.tmpl')
+		else:
+			self.redirect('/profile')
 
 class TwitterAuthorizationHandler(webapp.RequestHandler):
 	def get(self):
