@@ -45,6 +45,7 @@ import m256
 from m256_cfg import *
 from models import *
 
+#FIXME: To sanitize
 class MainHandler(webapp.RequestHandler):
     def get(self):
 		blob = memcache.get('frontpage_blob')
@@ -74,6 +75,7 @@ class MainHandler(webapp.RequestHandler):
 
 		m256.output_template(self, 'templates/front.tmpl', {'blob': blob})
 
+#FIXME: To sanitize
 class LookupHandler(webapp.RequestHandler):
 	def get(self, handle=None):
 		if handle is None:
@@ -127,6 +129,7 @@ class LookupHandler(webapp.RequestHandler):
 
 		self.response.out.write('Sorry, but I cant find a matching user')
 
+#FIXME: To sanitize
 class ScoreboardHandler(webapp.RequestHandler):
 	def get(self):
 		periods = ('week', 'month', 'alltime')
@@ -160,6 +163,7 @@ class ProfileHandler(webapp.RequestHandler):
 
 		m256.output_template(self, 'templates/profile.tmpl', template_values)
 
+#FIXME: To sanitize
 class DataHandler(webapp.RequestHandler):
 	def get(self, key=None):
 		data = memcache.get('checkindata_'+key)

@@ -33,18 +33,25 @@ from models import *
 
 class FoursquareHistoryDispatcher(webapp.RequestHandler):
 	def get(self):
-		users = FoursquareAccount.all()
-		users.filter('foursquare_disabled = ', False)
+		q1 = FoursquareAccount.all()
+		q1.filter('foursquare_disabled = ', False)
 
-		for user in users:
-			q = FoursquareCheckin.all()
-			q.filter('owner = ', user)
-			q.order('-checkin_id')
-			if q.count() == 0:
-				taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': user.foursquare_id}, method='GET')
+		for user in q1:
+			params = {}
+			params['fsq_id'] = user.foursquare_id
+
+			q2 = FoursquareCheckin.all()
+			q2.filter('owner = ', user)
+			q2.order('-checkin_id')
+
+			if q.count() != 0:
+				latest = q2.get()
+				params['since'] = latest.checkin_id
 			else:
-				latest = q.get()
-				taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': user.foursquare_id, 'since': latest.checkin_id }, method='GET')
+				params['since'] = 0
+
+			logging.info('Enqueing task worker_foursquare_history with params %s' % params)
+			taskqueue.add(url='/worker_foursquare_history', params=params, method='GET')
 
 class TwitterHistoryDispatcher(webapp.RequestHandler):
 	def get(self):
@@ -62,8 +69,10 @@ class TwitterHistoryDispatcher(webapp.RequestHandler):
 			if q2.count() != 0:
 				latest = q2.get()
 				params['since'] = latest.tweet_id
+			else:
+				params['since'] = 0
 
-			logging.info('Enqueing task worker_twitter_history with params %s<br>' % params)
+			logging.info('Enqueing task worker_twitter_history with params %s' % params)
 			taskqueue.add(url='/worker_twitter_history', params=params, method='GET')
 
 class StatisticsDispatcher(webapp.RequestHandler):
