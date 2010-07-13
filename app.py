@@ -423,7 +423,9 @@ class TwitterAccountDeleteHandler(webapp.RequestHandler):
 				db.delete(q2.fetch(1000)) #FIXME: Won't delete all
 				twitter_account.delete()
 
-		m256.output_template(self, 'templates/account_deleted.tmpl')
+			m256.output_template(self, 'templates/account_deleted.tmpl')
+		else:
+			self.redirect('/profile')
 
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
