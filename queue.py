@@ -70,9 +70,9 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 
 		if self.request.get('since'):
 			since = self.request.get('since')
-			request_url = m256.foursquare_history_url+'?l=250&sinceid='+since
+			request_url = m256.foursquare_history_url+'?l=50&sinceid='+since
 		else:
-			request_url = m256.foursquare_history_url+'?l=250&sinceid=1'
+			request_url = m256.foursquare_history_url+'?l=50&sinceid=1'
 
 		logging.info('Using request URL: %s' % request_url)
 		content = m256.foursquare_token_request(request_url, 'GET', fsq_account.access_key, fsq_account.access_secret)
@@ -117,12 +117,12 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 
 		if self.request.get('since'):
 			since = self.request.get('since')
-			request_url = m256.twitter_user_timeline_url+'?count=200&since_id='+since
+			request_url = m256.twitter_user_timeline_url+'?count=50&since_id='+since
 		elif self.request.get('before'):
 			before = self.request.get('before')
-			request_url = m256.twitter_user_timeline_url+'?count=200&max_id='+before
+			request_url = m256.twitter_user_timeline_url+'?count=50&max_id='+before
 		else:
-			request_url = m256.twitter_user_timeline_url+'?count=200'
+			request_url = m256.twitter_user_timeline_url+'?count=50'
 
 		logging.info('Using request URL: %s' % request_url)
 		content = m256.twitter_token_request(request_url, 'GET', t_acct.access_key, t_acct.access_secret)
