@@ -1,2 +1,3 @@
 m256_cfg.py
 *.pyc
+.gitignore
