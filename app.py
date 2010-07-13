@@ -225,7 +225,7 @@ class FoursquareAuthorizationHandler(webapp.RequestHandler):
 			m256.output_maintenance(self)
 			return
 
-		url = m256.foursquare_authorize_url+'?oauth_token='+request_token['oauth_token']
+		url = m256.foursquare_authorize_url+'?oauth_token='+req.request_key
 		m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Foursquare'})
 
 class FoursquareCallbackHandler(webapp.RequestHandler):
@@ -318,16 +318,28 @@ class FoursquareAccountDeleteHandler(webapp.RequestHandler):
 
 class TwitterAuthorizationHandler(webapp.RequestHandler):
 	def get(self):
-		result = m256.twitter_consumer_request(twitter_request_token_url, 'POST')
+		result = m256.twitter_consumer_request(m256.twitter_request_token_url, 'POST')
 		request_token = dict(cgi.parse_qsl(result))
 
-		#FIXME: Should check to see if keys exist here (aka did we get a well formed response)
+		if 'oauth_token' not in request_token:
+			m256.output_error(self, 'Twitter request token response was invalid')
+			return
+
+		if 'oauth_token_secret' not in request_token:
+			m256.output_error(self, 'Twitter request token response was invalid')
+			return
+
 		req = OauthRequest()
 		req.request_key = request_token['oauth_token']
 		req.request_secret = request_token['oauth_token_secret']
-		req.put()
 
-		url = twitter_authorize_url+'?oauth_token='+request_token['oauth_token']
+		try:
+			req.put()
+		except CapabilityDisabledError:
+			m256.output_maintenance(self)
+			return
+
+		url = m256.twitter_authorize_url+'?oauth_token='+req.request_key
 		m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Twitter'})
 
 class TwitterCallbackHandler(webapp.RequestHandler):

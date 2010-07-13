@@ -21,6 +21,10 @@ foursquare_access_token_url = 'http://foursquare.com/oauth/access_token'
 foursquare_authorize_url = 'http://foursquare.com/oauth/authorize'
 foursquare_userdetail_url = 'http://api.foursquare.com/v1/user.json'
 
+twitter_request_token_url = 'https://api.twitter.com/oauth/request_token'
+twitter_authorize_url = 'https://api.twitter.com/oauth/authorize'
+
+
 def oauth_consumer_request(url, method, consumer_key, consumer_secret):
 	consumer = oauth.Consumer(consumer_key, consumer_secret)
 	client = oauth.Client(consumer)
