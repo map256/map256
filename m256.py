@@ -103,6 +103,7 @@ def get_user_model():
 		account = Account()
 		account.google_user = user
 		account.put()
+		notify_admin('A new map256.com user has been created: %s' % user.nickname())
 	else:
 		account = account.get()
 
