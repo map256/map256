@@ -11,11 +11,11 @@
 		<hr>
 		<h2>Foursquare Accounts:</h2>
 		<ul>
-{% for tuser in tusers %}
-{% if tuser.twitter_username %}
-			<li><a href="/t/{{ tuser.twitter_username}}">{{ tuser.twitter_username}}</a> (<a href="/foursquare_account_delete?fsq_id={{ tuser.foursquare_id }}">delete</a>)</li>
+{% for foursquare_account in foursquare_accounts %}
+{% if foursquare_account.twitter_username %}
+			<li><a href="/t/{{ foursquare_account.twitter_username}}">{{ foursquare_account.twitter_username}}</a> (<a href="/foursquare_account_delete?fsq_id={{ foursquare_account.foursquare_id }}">delete</a>)</li>
 {% else %}
-			<li><a href="/f/{{ tuser.foursquare_id}}">{{ tuser.foursquare_id}}</a> (<a href="/foursquare_account_delete?fsq_id={{ tuser.foursquare_id }}">delete</a>)</li>
+			<li><a href="/f/{{ foursquare_account.foursquare_id}}">{{ foursquare_account.foursquare_id}}</a> (<a href="/foursquare_account_delete?fsq_id={{ foursquare_account.foursquare_id }}">delete</a>)</li>
 {% endif %}
 {% endfor %}
 		</ul>

@@ -158,13 +158,13 @@ class ProfileHandler(webapp.RequestHandler):
 		else:
 			acc = account.get()
 
-		tusers = FoursquareAccount.all()
-		tusers.filter('account =', acc)
-		template_values['tusers'] = tusers.fetch(50)
+		q1 = FoursquareAccount.all()
+		q1.filter('account =', acc)
+		template_values['foursquare_accounts'] = q1.fetch(25)
 
 		q2 = TwitterAccount.all()
 		q2.filter('account =', acc)
-		template_values['twitter_accounts'] = q2.fetch(50)
+		template_values['twitter_accounts'] = q2.fetch(25)
 
 		template_values['nickname'] = user.nickname()
 
