@@ -107,6 +107,7 @@ def get_user_model():
 	if account.count() == 0:
 		account = Account()
 		account.google_user = user
+		#FIXME: Unchecked put
 		account.put()
 		notify_admin('A new map256.com user has been created: %s' % user.nickname())
 	else:
@@ -119,6 +120,17 @@ def notify_admin(body):
 	               to='Eric Sigler <esigler@gmail.com>',
 	               subject='Map256 Admin Notification',
 	               body=body)
+
+def output_error(app, admin_description):
+	app.error(500)
+	path = os.path.join(os.path.dirname(__file__), 'templates/error.tmpl')
+	app.response.out.write(template.render(path, {}))
+	notify_admin('ERROR: '+admin_description)
+
+def output_maintenance(app):
+	app.error(500)
+	path = os.path.join(os.path.dirname(__file__), 'templates/maintenance.tmpl')
+	app.response.out.write(template.render(path, {}))
 
 def rate_limit_check():
 	req_ip = memcache.get('iprate_'+self.request.remote_addr)

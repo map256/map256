@@ -36,6 +36,7 @@ from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.api.labs import taskqueue
 from google.appengine.api import mail
+from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 
 from django.utils import simplejson
 
@@ -206,13 +207,21 @@ class FoursquareAuthorizationHandler(webapp.RequestHandler):
 		content = m256.foursquare_consumer_request(m256.foursquare_request_token_url, 'GET')
 		request_token = dict(cgi.parse_qsl(content))
 
-		req = OauthRequest()
-		req.request_key = request_token['oauth_token']
-		req.request_secret = request_token['oauth_token_secret']
-		req.put()
+		if 'oauth_token' in request_token and 'oauth_token_secret' in request_token:
+			req = OauthRequest()
+			req.request_key = request_token['oauth_token']
+			req.request_secret = request_token['oauth_token_secret']
 
-		url = authorize_url+'?oauth_token='+request_token['oauth_token']
-		m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Foursquare'})
+			try:
+				req.put()
+			except CapabilityDisabledError:
+				m256.output_maintenance(self)
+				return
+
+			url = authorize_url+'?oauth_token='+request_token['oauth_token']
+			m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Foursquare'})
+		else:
+			m256.output_error(self, 'Foursquare request token response was invalid')
 
 class FoursquareCallbackHandler(webapp.RequestHandler):
 	def get(self):
@@ -221,6 +230,7 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 		q1.filter('request_key = ', arg)
 
 		if q1.count() < 1:
+			#FIXME: Should be self.redirect('/foursquare_authorization')
 			raise Exception('Invalid request (key does not exist)')
 
 		req = q1.get()
