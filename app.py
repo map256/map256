@@ -207,21 +207,26 @@ class FoursquareAuthorizationHandler(webapp.RequestHandler):
 		content = m256.foursquare_consumer_request(m256.foursquare_request_token_url, 'GET')
 		request_token = dict(cgi.parse_qsl(content))
 
-		if 'oauth_token' in request_token and 'oauth_token_secret' in request_token:
-			req = OauthRequest()
-			req.request_key = request_token['oauth_token']
-			req.request_secret = request_token['oauth_token_secret']
-
-			try:
-				req.put()
-			except CapabilityDisabledError:
-				m256.output_maintenance(self)
-				return
-
-			url = authorize_url+'?oauth_token='+request_token['oauth_token']
-			m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Foursquare'})
-		else:
+		if 'oauth_token' not in request_token:
 			m256.output_error(self, 'Foursquare request token response was invalid')
+			return
+
+		if 'oauth_token_secret' not in request_token:
+			m256.output_error(self, 'Foursquare request token response was invalid')
+			return
+
+		req = OauthRequest()
+		req.request_key = request_token['oauth_token']
+		req.request_secret = request_token['oauth_token_secret']
+
+		try:
+			req.put()
+		except CapabilityDisabledError:
+			m256.output_maintenance(self)
+			return
+
+		url = m256.foursquare_authorize_url+'?oauth_token='+request_token['oauth_token']
+		m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Foursquare'})
 
 class FoursquareCallbackHandler(webapp.RequestHandler):
 	def get(self):
@@ -235,36 +240,54 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 
 		req = q1.get()
 
-		content = m256.foursquare_token_request(access_token_url, 'POST', req.request_key, req.request_secret)
+		content = m256.foursquare_token_request(m256.foursquare_access_token_url, 'POST', req.request_key, req.request_secret)
 		access_token = dict(cgi.parse_qsl(content))
 
-		content = m256.foursquare_token_request(userdetail_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
+		if 'oauth_token' not in access_token:
+			m256.output_error(self, 'Foursquare access token response was invalid')
+			return
+
+		if 'oauth_token' not in access_token:
+			m256.output_error(self, 'Foursquare access token response was invalid')
+			return
+
+		content = m256.foursquare_token_request(m256.foursquare_userdetail_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
 		userinfo = simplejson.loads(content)
+
+		if 'user' not in userinfo:
+			m256.output_error(self, 'Foursquare user detail response was invalid')
+
+		if 'id' not in userinfo['user']:
+			m256.output_error(self, 'Foursquare user detail response was invalid')
 
 		q2 = FoursquareAccount.all()
 		q2.filter('foursquare_id = ', str(userinfo['user']['id']))
 
 		if q2.count() > 0:
-			raise Exception('User is already authorized!')
+			self.redirect('/profile')
+			return
 
-		#FIXME: Need to check for these keys first
-		tuser = FoursquareAccount()
-		tuser.access_key = access_token['oauth_token']
-		tuser.access_secret = access_token['oauth_token_secret']
-		tuser.foursquare_id = str(userinfo['user']['id'])
-		tuser.account = m256.get_user_model()
+		new_account = FoursquareAccount()
+		new_account.access_key = access_token['oauth_token']
+		new_account.access_secret = access_token['oauth_token_secret']
+		new_account.foursquare_id = str(userinfo['user']['id'])
+		new_account.account = m256.get_user_model()
 
-		if userinfo['user'].has_key('twitter'):
-			tuser.twitter_username = userinfo['user']['twitter']
+		if 'twitter' in userinfo['user']:
+			new_account.twitter_username = userinfo['user']['twitter']
 
-		tuser.put()
+		try:
+			new_account.put()
+		except CapabilityDisabledError:
+			m256.output_maintenance(self)
+			return
 
-		taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': tuser.foursquare_id}, method='GET')
+		taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': new_account.foursquare_id}, method='GET')
 
-		url = '/f/'+str(userinfo['user']['id'])
+		url = '/f/'+new_account.foursquare_id
 
 		m256.output_template(self, 'templates/callback.tmpl', {'map_url': url})
-		m256.notify_admin("New Foursquare account added: http://www.map256.com/f/%s" % tuser.foursquare_id)
+		m256.notify_admin("New Foursquare account added: http://www.map256.com/f/%s" % new_account.foursquare_id)
 
 class FoursquareAccountDeleteHandler(webapp.RequestHandler):
 	def get(self):
