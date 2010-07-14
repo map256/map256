@@ -4,18 +4,18 @@
 		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 		<title>map256: View User</title>
 		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-		<script type="text/javascript">
-			var centerpt = new google.maps.LatLng(37.958135,-91.773429);
-		</script>
-		<script type="text/javascript" src="/json_parse.js"></script>
-		<script type="text/javascript" src="/data/{{ account_key }}"></script>
 		<script type="text/javascript" src="/map256.js"></script>
+		<script type="text/javascript" src="/data/{{ account_key }}"></script>
 	</head>
 	<body style="margin:0px; padding:0px;" onload="initialize()">
 		<div id="map_canvas" style="width: 100%; height: 100%;"></div>
 		<div id="container" style = "position:absolute; bottom:35px; left:50px; width:375px; padding:10px; background-color:#FFFFFF">
 			<span style = "font-size:16pt;"><a href="/">Map256</a></span>
-			<span style = "font-size:9pt;">(<a href="/faq.html">FAQ</a>, <a href="/scoreboard">Scoreboard</a>)</span>
+{% if logged_in %}
+			<span style = "font-size:9pt;">(<a href="/faq.html">FAQ</a>, <a href="/profile">profile</a>, <a href="{{ signout_url }}">sign out</a>)</span>
+{% else %}
+			<span style = "font-size:9pt;">(<a href="/faq.html">FAQ</a>)</span>
+{% endif %}
 			<hr>
 			<input type="button" onclick="toggle_markers()" value="Toggle markers">
 			<input type="button" onclick="toggle_gradient()" value="Toggle recent-ness gradient">
@@ -24,6 +24,10 @@
 			<input type="button" id="g_p" onclick="goto_previous()" value="<">
 			<input type="button" id="g_n" onclick="goto_next()" value=">">
 			<input type="button" id="g_l" onclick="goto_latest()" value=">>"> Newest</span>
+{% if not logged_in %}
+			<hr>
+			<p>Want to get started plotting your own travels?  Sign in to <a href="/profile">Map256</a> (Google Account login required).</p>
+{% endif %}
 		</div>
 		<script type="text/javascript">
 			var _gaq = _gaq || [];

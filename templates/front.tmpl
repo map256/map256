@@ -4,21 +4,22 @@
 		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 		<title>map256</title>
 		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-		<script type="text/javascript" src="/json_parse.js"></script>
+		<script type="text/javascript" src="/map256.js"></script>
 		<script type="text/javascript">
 			var frontpage_userlist = json_parse('{{ frontpage_userlist }}')
 		</script>
-		<script type="text/javascript" src="/map256.js"></script>
 	</head>
 	<body style="margin:0px; padding:0px;" onload="initialize_front()">
 		<div id="map_canvas" style="width: 100%; height: 100%;"></div>
 		<div id="container" style = "position:absolute; bottom:35px; left:50px; width:375px; padding:10px; background-color:#FFFFFF">
 			<span style = "font-size:16pt;"><a href="/">Map256</a></span>
-			<span style = "font-size:9pt;">(<a href="/faq.html">FAQ</a>, <a href="/scoreboard">Scoreboard</a>)</span>
-			<hr>
 {% if logged_in %}
-			<p>Check out <a href="/profile">your profile</a>, or <a href="{{ signout_url }}">sign out</a>.</p>
+			<span style = "font-size:9pt;">(<a href="/faq.html">FAQ</a>, <a href="/profile">profile</a>, <a href="{{ signout_url }}">sign out</a>)</span>
 {% else %}
+			<span style = "font-size:9pt;">(<a href="/faq.html">FAQ</a>)</span>
+{% endif %}
+{% if not logged_in %}
+			<hr>
 			<p>Want to get started plotting your own travels?  Sign in to <a href="/profile">Map256</a> (Google Account login required).</p>
 {% endif %}
 		</div>
