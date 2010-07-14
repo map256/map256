@@ -145,9 +145,17 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 					ci.put()
 
 		if len(history) > 1:
-			last_id = history[len(history)-1]['id']
-			logging.info('Have more than one tweet, enqueing at last_id: %s' % last_id)
-			taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'before': last_id }, method='GET')
+			#FIXME: Does not result in acceptable behavior if there are no geo tweets AT ALL for the user
+			if self.request.get('since'):
+				logging.info('Have more than one tweet, enqueing since last_id: %s' % history[0]['id'])
+				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'since': history[0]['id']}, method='GET')
+			elif self.request.get('before'):
+				logging.info('Have more than one tweet, enqueing before last_id: %s' % history[len(history)-1]['id'])
+				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'before': history[len(history)-1]['id']}, method='GET')
+			else:
+				logging.info('Have more than one tweet, enqueing since last_id: %s and before last_id: %s' % (history[0]['id'], history[len(history)-1]['id']))
+				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'since': history[0]['id']}, method='GET')
+				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'before': history[len(history)-1]['id']}, method='GET')
 
 class StatisticsWorker(webapp.RequestHandler):
 	def get(self, kind=None, period=None):
