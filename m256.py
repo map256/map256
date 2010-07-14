@@ -144,40 +144,31 @@ def output_maintenance(app):
 	path = os.path.join(os.path.dirname(__file__), 'templates/maintenance.tmpl')
 	app.response.out.write(template.render(path, {}))
 
-#def rate_limit_check():
-	#req_ip = memcache.get('iprate_'+self.request.remote_addr)
+def downloaderror_check():
+	recent = memcache.get('urlfetch_count')
+
+	if recent is None:
+		memcache.add('urlfetch_count', 1, 150)
+	else:
+		recent = recent + 1
+		memcache.replace('urlfetch_count', recent, 150)
+
+	if recent > 10:
+		notify_admin('High error rate on URL fetches')
+
+#def rate_limit_check(app):
+	#req_ip = memcache.get('iprate_'+app.request.remote_addr)
 
 	#if req_ip is None:
 		#req_ip = 1
-		#memcache.add('iprate_'+self.request.remote_addr, req_ip, 120)
+		#memcache.add('iprate_'+app.request.remote_addr, req_ip, 120)
 	#else:
 		#req_ip = req_ip+1
-		#memcache.replace('iprate_'+self.request.remote_addr, req_ip, 120)
+		#memcache.replace('iprate_'+app.request.remote_addr, req_ip, 120)
 
 	#if req_ip > 10:
 		#self.response.out.write('Rate limiter kicked in, /authorize blocked for 120 seconds')
 		#return
-
-		#consumer = oauth.Consumer(consumer_key, consumer_secret)
-		#token = oauth.Token(user.access_key, user.access_secret)
-		#client = oauth.Client(consumer, token)
-		#headers = {'User-Agent': 'map256.com:20100617'}
-
-		#try:
-			#resp, content = client.request(url_to_fetch, 'GET', headers=headers)
-		#except urlfetch.Error:
-			#recent = memcache.get('urlfetch_count')
-
-			#if recent is None:
-				#memcache.add('urlfetch_count', 1, 150)
-			#else:
-				#recent = recent + 1
-				#memcache.replace('urlfetch_count', recent, 150)
-
-			#if recent > 10:
-				#mail.send_mail(sender='Map256 <service@map256.com', to='Eric Sigler <esigler@gmail.com>', subject='Map256 Foursquare Errors', body='High error rate on FSQ fetches')
-
-			#return
 
 		#if resp.status == 403:
 			#recent = memcache.get('fsq_403_'+fsq_id)
@@ -193,6 +184,3 @@ def output_maintenance(app):
 				#mail.send_mail(sender='Map256 <service@map256.com', to='Eric Sigler <esigler@gmail.com>', subject='Map256 Foursquare 403 error', body='High 403 rate on %s user' % fsq_id )
 
 			#return
-
-		#if resp.status != 200:
-			#raise Exception('Invalid response %s.' % resp['status'])

@@ -75,7 +75,13 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 			request_url = m256.foursquare_history_url+'?l=50&sinceid=1'
 
 		logging.info('Using request URL: %s' % request_url)
-		content = m256.foursquare_token_request(request_url, 'GET', fsq_account.access_key, fsq_account.access_secret)
+
+		try:
+			content = m256.foursquare_token_request(request_url, 'GET', fsq_account.access_key, fsq_account.access_secret)
+		except urlfetch.DownloadError:
+			m256.downloaderror_check()
+			return
+
 		history = simplejson.loads(content)
 
 		checkins = history['checkins']
@@ -125,7 +131,13 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 			request_url = m256.twitter_user_timeline_url+'?count=50'
 
 		logging.info('Using request URL: %s' % request_url)
-		content = m256.twitter_token_request(request_url, 'GET', t_acct.access_key, t_acct.access_secret)
+
+		try:
+			content = m256.twitter_token_request(request_url, 'GET', t_acct.access_key, t_acct.access_secret)
+		except urlfetch.DownloadError:
+			m256.downloaderror_check()
+			return
+
 		history = simplejson.loads(content)
 
 		for tweet in history:

@@ -37,6 +37,8 @@ from google.appengine.api import users
 from google.appengine.api.labs import taskqueue
 from google.appengine.api import mail
 from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
+from google.appengine.api import urlfetch
+from google.appengine.api.urlfetch import DownloadError
 
 from django.utils import simplejson
 
@@ -206,7 +208,13 @@ class DataHandler(webapp.RequestHandler):
 
 class FoursquareAuthorizationHandler(webapp.RequestHandler):
 	def get(self):
-		content = m256.foursquare_consumer_request(m256.foursquare_request_token_url, 'GET')
+
+		try:
+			content = m256.foursquare_consumer_request(m256.foursquare_request_token_url, 'GET')
+		except urlfetch.DownloadError:
+			m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_request_token_url)
+			return
+
 		request_token = dict(cgi.parse_qsl(content))
 
 		if 'oauth_token' not in request_token:
@@ -242,7 +250,12 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 
 		req = q1.get()
 
-		content = m256.foursquare_token_request(m256.foursquare_access_token_url, 'POST', req.request_key, req.request_secret)
+		try:
+			content = m256.foursquare_token_request(m256.foursquare_access_token_url, 'POST', req.request_key, req.request_secret)
+		except urlfetch.DownloadError:
+			m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_access_token_url)
+			return
+
 		access_token = dict(cgi.parse_qsl(content))
 
 		if 'oauth_token' not in access_token:
@@ -253,7 +266,12 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 			m256.output_error(self, 'Foursquare access token response was invalid')
 			return
 
-		content = m256.foursquare_token_request(m256.foursquare_userdetail_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
+		try:
+			content = m256.foursquare_token_request(m256.foursquare_userdetail_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
+		except urlfetch.DownloadError:
+			m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_userdetail_url)
+			return
+
 		userinfo = simplejson.loads(content)
 
 		if 'user' not in userinfo:
@@ -319,7 +337,12 @@ class FoursquareAccountDeleteHandler(webapp.RequestHandler):
 
 class TwitterAuthorizationHandler(webapp.RequestHandler):
 	def get(self):
-		result = m256.twitter_consumer_request(m256.twitter_request_token_url, 'POST')
+		try:
+			result = m256.twitter_consumer_request(m256.twitter_request_token_url, 'POST')
+		except urlfetch.DownloadError:
+			m256.output_error(self, 'DownloadError requesting %s' % m256.twitter_request_token_url)
+			return
+
 		request_token = dict(cgi.parse_qsl(result))
 
 		if 'oauth_token' not in request_token:
@@ -355,7 +378,12 @@ class TwitterCallbackHandler(webapp.RequestHandler):
 
 		req = q1.get()
 
-		content = m256.twitter_token_request(m256.twitter_access_token_url, 'POST', req.request_key, req.request_secret)
+		try:
+			content = m256.twitter_token_request(m256.twitter_access_token_url, 'POST', req.request_key, req.request_secret)
+		except urlfetch.DownloadError:
+			m256.output_error(self, 'DownloadError requesting %s' % m256.twitter_access_token_url)
+			return
+
 		access_token = dict(cgi.parse_qsl(content))
 
 		if 'oauth_token' not in access_token:
@@ -366,8 +394,17 @@ class TwitterCallbackHandler(webapp.RequestHandler):
 			m256.output_error(self, 'Twitter access token response was invalid')
 			return
 
-		content = m256.twitter_token_request(m256.twitter_user_timeline_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
+		try:
+			content = m256.twitter_token_request(m256.twitter_user_timeline_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
+		except urlfetch.DownloadError:
+			m256.output_error(self, 'DownloadError requesting %s' % m256.twitter_user_timeline_url)
+			return
+
 		userinfo = simplejson.loads(content)
+
+		if len(userinfo) == 0:
+			m256.output_error(self, 'Twitter user timeline response was invalid')
+			return
 
 		if 'user' not in userinfo[0]:
 			m256.output_error(self, 'Twitter user timeline response was invalid')
