@@ -22,17 +22,21 @@
 # THE SOFTWARE.
 #
 
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import util
-
 import cgi
 import os
 import sys
 import datetime
 import logging
+import urllib
 
+from google.appengine.api import urlfetch
+from google.appengine.api.urlfetch import DownloadError
+from google.appengine.api import mail
+from google.appengine.ext import webapp
+from google.appengine.ext.webapp import util
 from google.appengine.api.labs import taskqueue
 from google.appengine.api import memcache
+from django.utils import simplejson
 
 httplib2_path = 'lib/httplib2.zip'
 sys.path.insert(0, httplib2_path)
@@ -41,15 +45,6 @@ import httplib2
 oauth_path = 'lib/oauth2.zip'
 sys.path.insert(0, oauth_path)
 import oauth2 as oauth
-
-from django.utils import simplejson
-
-import urllib
-from google.appengine.api import urlfetch
-from google.appengine.api.urlfetch import DownloadError
-from google.appengine.api import mail
-
-import math
 
 from m256_cfg import *
 from models import *
