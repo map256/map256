@@ -92,11 +92,19 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 			q2.filter('checkin_id = ', str(checkin['id']))
 
 			if q2.count() == 0:
+				#FIXME: Should verify all of these properties exist before adding
 				logging.info('Dont have existing record, going to create new checkin')
 				ci = FoursquareCheckin()
 				ci.foursquare_id = str(fsq_id)
 				ci.owner = fsq_account
 				ci.location = str(checkin['venue']['geolat'])+','+str(checkin['venue']['geolong'])
+
+				if 'shout' in checkin:
+					description = checkin['venue']['name']+' \"'+checkin['shout']+'\"'
+				else:
+					description = checkin['venue']['name']
+
+				ci.description = description
 				ci.checkin_id = str(checkin['id'])
 				ci.occurred = datetime.datetime.strptime(checkin['created'], '%a, %d %b %y %H:%M:%S +0000')
 				ci.account_owner = fsq_account.account
@@ -147,11 +155,13 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 				q2.filter('tweet_id = ', str(tweet['id']))
 
 				if q2.count() == 0:
+					#FIXME: Should verify all of these properties exist before adding
 					logging.info('Dont have existing record, going to create new checkin')
 					ci = TwitterCheckin()
 					ci.owner = t_acct
 					ci.location = str(tweet['geo']['coordinates'][0])+','+str(tweet['geo']['coordinates'][1])
 					ci.tweet_id = str(tweet['id'])
+					ci.description = tweet['text']
 					ci.occurred = datetime.datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
 					ci.account_owner = t_acct.account
 					ci.put()
