@@ -117,7 +117,6 @@ function createMarker(marker, infowindow, map) {
 
 function setvalue(event, ui) {
 	var valx = $("#slider").slider( "option", "value" );
-	$("#slidervalue").val(valx);
 	markers[marker_position].setVisible(false);
 	marker_position = (checkin_data.length-1) - valx;
 	markers[marker_position].setVisible(true);
@@ -125,6 +124,15 @@ function setvalue(event, ui) {
 }
 
 function aftershock(data) {
+
+	var mapOptions = {
+		zoom: 12,
+		center: centerpt,
+		mapTypeId: google.maps.MapTypeId.ROADMAP
+	};
+
+	map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+
 	for (var i=1; i<checkin_data.length; i++) {
 		if (checkin_data[i-1]['location'] != checkin_data[i]['location']) {
 			var tmp_a = checkin_data[i-1]['location'].split(",");
@@ -148,7 +156,7 @@ function aftershock(data) {
 		}));
 
 		infowindows.push(new google.maps.InfoWindow({
-			content: "<h4>"+checkin_data[y]['description']+"</h4>",
+			content: "<p><strong>"+checkin_data[y]['description']+"</strong><br><em>"+checkin_data[y]['occurred']+"</em></p>",
 			maxWidth: 200
 		}));
 	}
@@ -165,6 +173,7 @@ function aftershock(data) {
 		var tmp = checkin_data[0]['location'].split(",");
 		centerpt = new google.maps.LatLng(tmp[0], tmp[1]);
 		map.setCenter(centerpt);
+		markers[0].setVisible(true);
 	}
 
 	var sld_max = checkin_data.length-1
@@ -175,30 +184,23 @@ function aftershock(data) {
 
 	google.maps.event.addDomListener(document.getElementById("g_n"), "click", function(ev) {
 		map.setCenter(markers[marker_position].getPosition());
+		$("#slider").slider( "option", "value", (checkin_data.length-1) - marker_position );
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_l"), "click", function(ev) {
 		map.setCenter(markers[marker_position].getPosition());
+		$("#slider").slider( "option", "value", (checkin_data.length-1) - marker_position );
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_p"), "click", function(ev) {
 		map.setCenter(markers[marker_position].getPosition());
+		$("#slider").slider( "option", "value", (checkin_data.length-1) - marker_position );
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_e"), "click", function(ev) {
 		map.setCenter(markers[marker_position].getPosition());
+		$("#slider").slider( "option", "value", (checkin_data.length-1) - marker_position );
 	});
-}
-
-function initialize() {
-	var mapOptions = {
-		zoom: 12,
-		center: centerpt,
-		mapTypeId: google.maps.MapTypeId.ROADMAP
-	};
-
-	map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
-
 }
 
 function initialize_front() {

@@ -197,6 +197,8 @@ class DataHandler(webapp.RequestHandler):
 				info['occurred'] = str(checkin.occurred)
 				#FIXME: So, turns out some browsers doing JSON decoding dont parse Unicode properly.  Dropping chars for now, need to find better libs later.
 				info['description'] = checkin.description.encode('ascii', 'replace')
+				#FIXME: At some point should pretty print this, and set it to a saner timezone
+				info['occurred'] = str(checkin.occurred)
 				data.append(info)
 
 			data.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['occurred'], '%Y-%m-%d %H:%M:%S'),
