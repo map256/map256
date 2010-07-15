@@ -167,6 +167,7 @@ class ProfileHandler(webapp.RequestHandler):
 class DataHandler(webapp.RequestHandler):
 	def get(self, key=None):
 		data = memcache.get('checkindata_'+key)
+		self.response.headers.add_header('Content-Type', 'application/json')
 
 		if data is None:
 			data = []
@@ -194,15 +195,16 @@ class DataHandler(webapp.RequestHandler):
 				info = {}
 				info['location'] = str(checkin.location)
 				info['occurred'] = str(checkin.occurred)
+				#FIXME: So, turns out some browsers doing JSON decoding dont parse Unicode properly.  Dropping chars for now, need to find better libs later.
+				info['description'] = checkin.description.encode('ascii', 'replace')
 				data.append(info)
 
 			data.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['occurred'], '%Y-%m-%d %H:%M:%S'),
 			                              datetime.datetime.strptime(y['occurred'], '%Y-%m-%d %H:%M:%S')), reverse=True)
 
 			encoded = simplejson.dumps(data)
-			wrapped = 'var checkin_data = json_parse(\''+encoded+'\')'
-			memcache.add('checkindata_'+key, wrapped, 60)
-			self.response.out.write(wrapped)
+			memcache.add('checkindata_'+key, encoded, 60)
+			self.response.out.write(encoded)
 		else:
 			self.response.out.write(data)
 

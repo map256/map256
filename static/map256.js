@@ -109,20 +109,22 @@ function goto_earliest() {
 	markers[marker_position].setVisible(true);
 }
 
-function initialize() {
-	if (checkin_data.length > 0) {
-		var tmp = checkin_data[0]['location'].split(",");
-		centerpt = new google.maps.LatLng(tmp[0], tmp[1])
-	}
+function createMarker(marker, infowindow, map) {
+	google.maps.event.addListener(marker, 'click', function() {
+		infowindow.open(map, marker);
+	})
+}
 
-	var mapOptions = {
-		zoom: 12,
-		center: centerpt,
-		mapTypeId: google.maps.MapTypeId.ROADMAP
-	};
+function setvalue(event, ui) {
+	var valx = $("#slider").slider( "option", "value" );
+	$("#slidervalue").val(valx);
+	markers[marker_position].setVisible(false);
+	marker_position = (checkin_data.length-1) - valx;
+	markers[marker_position].setVisible(true);
+	map.setCenter(markers[marker_position].getPosition());
+}
 
-	map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
-
+function aftershock(data) {
 	for (var i=1; i<checkin_data.length; i++) {
 		if (checkin_data[i-1]['location'] != checkin_data[i]['location']) {
 			var tmp_a = checkin_data[i-1]['location'].split(",");
@@ -144,11 +146,32 @@ function initialize() {
 			map: map,
 			visible: false
 		}));
+
+		infowindows.push(new google.maps.InfoWindow({
+			content: "<h4>"+checkin_data[y]['description']+"</h4>",
+			maxWidth: 200
+		}));
 	}
 
 	for (var x in lines) {
 		lines[x].setMap(map);
 	}
+
+	for (var key2 in markers) {
+		createMarker(markers[key2], infowindows[key2], map);
+	}
+
+	if (checkin_data.length > 0) {
+		var tmp = checkin_data[0]['location'].split(",");
+		centerpt = new google.maps.LatLng(tmp[0], tmp[1]);
+		map.setCenter(centerpt);
+	}
+
+	var sld_max = checkin_data.length-1
+
+	$(document).ready(function() {
+	  $("#slider").slider({ min: 0, max: sld_max, slide: setvalue, value: sld_max });
+	});
 
 	google.maps.event.addDomListener(document.getElementById("g_n"), "click", function(ev) {
 		map.setCenter(markers[marker_position].getPosition());
@@ -167,10 +190,15 @@ function initialize() {
 	});
 }
 
-function createMarker(marker, infowindow, map) {
-	google.maps.event.addListener(marker, 'click', function() {
-		infowindow.open(map, marker);
-	})
+function initialize() {
+	var mapOptions = {
+		zoom: 12,
+		center: centerpt,
+		mapTypeId: google.maps.MapTypeId.ROADMAP
+	};
+
+	map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+
 }
 
 function initialize_front() {

@@ -10,24 +10,10 @@
 	    <style type="text/css">
 	      #slider { margin: 10px; }
 	    </style>
-		<script type="text/javascript" src="/map256.js"></script>
-		<script type="text/javascript" src="/data/{{ account_key }}"></script>
 		<script type="text/javascript">
-		var sld_max = checkin_data.length-1
-		function setvalue(event, ui) {
-			var valx = $("#slider").slider( "option", "value" );
-			$("#slidervalue").val(valx);
-			markers[marker_position].setVisible(false);
-			marker_position = (checkin_data.length-1) - valx;
-			markers[marker_position].setVisible(true);
-			map.setCenter(markers[marker_position].getPosition());
-		}
-
-		$(document).ready(function() {
-		  $("#slider").slider({ min: 0, max: sld_max, slide: setvalue, value: sld_max });
-		});
-
+		$.getJSON('/data/{{ account_key }}', function(data) { checkin_data = data; aftershock(); })
 		</script>
+		<script type="text/javascript" src="/map256.js"></script>
 	</head>
 	<body style="margin:0px; padding:0px;" onload="initialize()">
 		<div id="map_canvas" style="width: 100%; height: 100%;"></div>
