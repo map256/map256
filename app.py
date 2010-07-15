@@ -193,6 +193,13 @@ class DataHandler(webapp.RequestHandler):
 
 			for checkin in checkins:
 				info = {}
+
+				if checkin.owner.hide_last_values:
+					td = datetime.timedelta(days=1)
+
+					if (datetime.datetime.now() - checkin.occurred) < td:
+						continue
+
 				info['location'] = str(checkin.location)
 				info['occurred'] = str(checkin.occurred)
 				#FIXME: So, turns out some browsers doing JSON decoding dont parse Unicode properly.  Dropping chars for now, need to find better libs later.

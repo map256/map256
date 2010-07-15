@@ -47,6 +47,7 @@ class FoursquareAccount(db.Model):
 	created = db.DateTimeProperty(auto_now_add=True)
 	foursquare_disabled = db.BooleanProperty(default=False)
 	account = db.ReferenceProperty(Account)
+	hide_last_values = db.BooleanProperty(default=False)
 
 class Checkin(polymodel.PolyModel):
 	created = db.DateTimeProperty(auto_now_add=True)
@@ -71,6 +72,7 @@ class TwitterAccount(db.Model):
 	created = db.DateTimeProperty(auto_now_add=True)
 	disabled = db.BooleanProperty(default=False)
 	account = db.ReferenceProperty(Account)
+	hide_last_values = db.BooleanProperty(default=False)
 
 class TwitterCheckin(Checkin):
 	owner = db.ReferenceProperty(TwitterAccount)
