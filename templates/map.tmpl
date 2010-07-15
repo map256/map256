@@ -4,8 +4,30 @@
 		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 		<title>map256: View User</title>
 		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+	    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+	    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+	    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+	    <style type="text/css">
+	      #slider { margin: 10px; }
+	    </style>
 		<script type="text/javascript" src="/map256.js"></script>
 		<script type="text/javascript" src="/data/{{ account_key }}"></script>
+		<script type="text/javascript">
+		var sld_max = checkin_data.length-1
+		function setvalue(event, ui) {
+			var valx = $("#slider").slider( "option", "value" );
+			$("#slidervalue").val(valx);
+			markers[marker_position].setVisible(false);
+			marker_position = (checkin_data.length-1) - valx;
+			markers[marker_position].setVisible(true);
+			map.setCenter(markers[marker_position].getPosition());
+		}
+
+		$(document).ready(function() {
+		  $("#slider").slider({ min: 0, max: sld_max, slide: setvalue, value: sld_max });
+		});
+
+		</script>
 	</head>
 	<body style="margin:0px; padding:0px;" onload="initialize()">
 		<div id="map_canvas" style="width: 100%; height: 100%;"></div>
@@ -24,6 +46,9 @@
 			<input type="button" id="g_p" onclick="goto_previous()" value="<">
 			<input type="button" id="g_n" onclick="goto_next()" value=">">
 			<input type="button" id="g_l" onclick="goto_latest()" value=">>"> Newest</span>
+			<hr>
+			<span style = "font-size:9pt;">History:</span>
+			<div id="slider"></div>
 {% if not logged_in %}
 			<hr>
 			<p>Want to get started plotting your own travels?  Sign in to <a href="/profile">Map256</a> (Google Account login required).</p>

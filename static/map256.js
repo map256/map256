@@ -5,6 +5,7 @@ var markers_visible = false;
 var gradient_visible = false;
 var marker_position = 0;
 var centerpt = new google.maps.LatLng(37.958135,-91.773429);
+var map;
 
 function hex (c) {
 	var s = "0123456789abcdef";
@@ -120,7 +121,7 @@ function initialize() {
 		mapTypeId: google.maps.MapTypeId.ROADMAP
 	};
 
-	var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+	map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
 	for (var i=1; i<checkin_data.length; i++) {
 		if (checkin_data[i-1]['location'] != checkin_data[i]['location']) {
