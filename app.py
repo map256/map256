@@ -362,6 +362,7 @@ class FoursquareAccountHideToggle(webapp.RequestHandler):
 			if fsq_account.hide_last_values:
 				fsq_account.hide_last_values = False
 			else:
+				#FIXME: Should try to invalidate all memcache entries associated with this
 				fsq_account.hide_last_values = True
 
 			try:
