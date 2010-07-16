@@ -8,8 +8,6 @@ Features in development:
 
 - Revamp storage of statistics, it's not going to be very workable long term, but would be best done after GA user signup is in place
 
-- Add "-12 hours" privacy support
-
 - Add heat maps
 	- "Places I've been overall"
 	- "Places everyone has been overall"
@@ -31,3 +29,4 @@ Completed:
 20100708 - Add ability to verify / begin ownership of account access
 20100708 - Add ability to remove account & history
 20100708 - Convert Foursquare checkin_id and foursquare_id fields back over to string, per the API docs
+20100715 - Add "-12 hours" privacy support
