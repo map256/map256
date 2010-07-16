@@ -329,6 +329,7 @@ class FoursquareAccountDeleteHandler(webapp.RequestHandler):
 		q1.filter('account =', u_acc)
 
 		if q1.count() != 0:
+			#FIXME: Uh, filtering on a single property here.  50?
 			r1 = q1.fetch(50)
 
 			for fsq_account in r1:
@@ -343,6 +344,33 @@ class FoursquareAccountDeleteHandler(webapp.RequestHandler):
 					return
 
 			m256.output_template(self, 'templates/account_deleted.tmpl')
+		else:
+			self.redirect('/profile')
+
+class FoursquareAccountHideToggle(webapp.RequestHandler):
+	def get(self):
+		fsq_id = str(self.request.get('fsq_id'))
+		u_acc = m256.get_user_model()
+
+		q1 = FoursquareAccount.all()
+		q1.filter('foursquare_id =', fsq_id)
+		q1.filter('account =', u_acc)
+
+		if q1.count() != 0:
+			fsq_account = q1.get()
+
+			if fsq_account.hide_last_values:
+				fsq_account.hide_last_values = False
+			else:
+				fsq_account.hide_last_values = True
+
+			try:
+				fsq_account.put()
+			except CapabilityDisabledError:
+				m256.output_maintenance(self)
+				return
+
+			self.redirect('/profile')
 		else:
 			self.redirect('/profile')
 
@@ -465,6 +493,7 @@ class TwitterAccountDeleteHandler(webapp.RequestHandler):
 		q1.filter('account =', u_acc)
 
 		if q1.count() != 0:
+			#FIXME: Uh, filtering on a single property here.  50?
 			r1 = q1.fetch(50)
 
 			for twitter_account in r1:
@@ -484,6 +513,7 @@ def main():
 										 ('/foursquare_authorization', FoursquareAuthorizationHandler),
 										 ('/foursquare_callback', FoursquareCallbackHandler),
 										 ('/foursquare_account_delete', FoursquareAccountDeleteHandler),
+										 ('/foursquare_account_hide_toggle', FoursquareAccountHideToggle),
 										 ('/twitter_authorization', TwitterAuthorizationHandler),
 										 ('/twitter_callback', TwitterCallbackHandler),
 										 ('/twitter_account_delete', TwitterAccountDeleteHandler),

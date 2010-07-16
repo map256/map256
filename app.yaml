@@ -36,6 +36,10 @@ handlers:
   script: app.py
   login: required
 
+- url: /foursquare_account_hide_toggle
+  script: app.py
+  login: required
+
 - url: /twitter_authorization
   script: app.py
   login: required

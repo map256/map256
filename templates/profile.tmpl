@@ -13,10 +13,16 @@
 		<ul>
 {% for foursquare_account in foursquare_accounts %}
 {% if foursquare_account.twitter_username %}
-			<li><a href="/t/{{ foursquare_account.twitter_username}}">{{ foursquare_account.twitter_username}}</a> (<a href="/foursquare_account_delete?fsq_id={{ foursquare_account.foursquare_id }}">delete</a>)</li>
+			<li><a href="/t/{{ foursquare_account.twitter_username}}">{{ foursquare_account.twitter_username}}</a>
 {% else %}
-			<li><a href="/f/{{ foursquare_account.foursquare_id}}">{{ foursquare_account.foursquare_id}}</a> (<a href="/foursquare_account_delete?fsq_id={{ foursquare_account.foursquare_id }}">delete</a>)</li>
+			<li><a href="/f/{{ foursquare_account.foursquare_id}}">{{ foursquare_account.foursquare_id}}</a>
 {% endif %}
+{% if foursquare_account.hide_last_values %}
+			(<a href="/foursquare_account_hide_toggle?fsq_id={{ foursquare_account.foursquare_id }}">show last 24hrs</a>)
+{% else %}
+			(<a href="/foursquare_account_hide_toggle?fsq_id={{ foursquare_account.foursquare_id }}">hide last 24hrs</a>)
+{% endif %}
+			(<a href="/foursquare_account_delete?fsq_id={{ foursquare_account.foursquare_id }}">delete</a>)</li>
 {% endfor %}
 		</ul>
 		<p><a href="/foursquare_authorization">Add a foursquare account</a></p>

@@ -79,6 +79,10 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 
 		history = simplejson.loads(content)
 
+		if 'checkins' not in history:
+			m256.notify_admin('Malformed response from Foursquare (%s)' % content)
+			return
+
 		checkins = history['checkins']
 		checkins.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['created'], '%a, %d %b %y %H:%M:%S +0000'), datetime.datetime.strptime(y['created'], '%a, %d %b %y %H:%M:%S +0000')))
 
