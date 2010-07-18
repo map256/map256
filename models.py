@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 #
 # Copyright (c) 2010 Eric Sigler, esigler@gmail.com
@@ -26,55 +27,55 @@ from google.appengine.ext import db
 from google.appengine.ext.db import polymodel
 
 class Account(db.Model):
-	google_user = db.UserProperty()
-	created = db.DateTimeProperty(auto_now_add=True)
+    google_user = db.UserProperty()
+    created = db.DateTimeProperty(auto_now_add=True)
 
 class OauthRequest(db.Model):
-	request_key = db.StringProperty()
-	request_secret = db.StringProperty()
-	created = db.DateTimeProperty(auto_now_add=True)
+    request_key = db.StringProperty()
+    request_secret = db.StringProperty()
+    created = db.DateTimeProperty(auto_now_add=True)
 
 class GeneratedStatistic(db.Model):
-	created = db.DateTimeProperty(auto_now_add=True)
-	description = db.StringProperty()
-	contents = db.TextProperty() #JSON encoded values
+    created = db.DateTimeProperty(auto_now_add=True)
+    description = db.StringProperty()
+    contents = db.TextProperty() #JSON encoded values
 
 class FoursquareAccount(db.Model):
-	access_key = db.StringProperty()
-	access_secret = db.StringProperty()
-	twitter_username = db.StringProperty()
-	foursquare_id = db.StringProperty()
-	created = db.DateTimeProperty(auto_now_add=True)
-	foursquare_disabled = db.BooleanProperty(default=False)
-	account = db.ReferenceProperty(Account)
-	hide_last_values = db.BooleanProperty(default=False)
+    access_key = db.StringProperty()
+    access_secret = db.StringProperty()
+    twitter_username = db.StringProperty()
+    foursquare_id = db.StringProperty()
+    created = db.DateTimeProperty(auto_now_add=True)
+    foursquare_disabled = db.BooleanProperty(default=False)
+    account = db.ReferenceProperty(Account)
+    hide_last_values = db.BooleanProperty(default=False)
 
 class Checkin(polymodel.PolyModel):
-	created = db.DateTimeProperty(auto_now_add=True)
-	occurred = db.DateTimeProperty()
-	location = db.GeoPtProperty()
-	description = db.StringProperty()
-	distance_traveled = db.FloatProperty() #stored in kilometers
-	velocity = db.FloatProperty() #stored in km/s
-	previous_checkin = db.SelfReferenceProperty()
-	account_owner = db.ReferenceProperty(Account)
+    created = db.DateTimeProperty(auto_now_add=True)
+    occurred = db.DateTimeProperty()
+    location = db.GeoPtProperty()
+    description = db.StringProperty()
+    distance_traveled = db.FloatProperty() #stored in kilometers
+    velocity = db.FloatProperty() #stored in km/s
+    previous_checkin = db.SelfReferenceProperty()
+    account_owner = db.ReferenceProperty(Account)
 
 class FoursquareCheckin(Checkin):
-	owner = db.ReferenceProperty(FoursquareAccount)
-	checkin_id = db.StringProperty()
-	foursquare_id = db.StringProperty()
+    owner = db.ReferenceProperty(FoursquareAccount)
+    checkin_id = db.StringProperty()
+    foursquare_id = db.StringProperty()
 
 class TwitterAccount(db.Model):
-	access_key = db.StringProperty()
-	access_secret = db.StringProperty()
-	screen_name = db.StringProperty()
-	twitter_id = db.StringProperty()
-	created = db.DateTimeProperty(auto_now_add=True)
-	disabled = db.BooleanProperty(default=False)
-	account = db.ReferenceProperty(Account)
-	hide_last_values = db.BooleanProperty(default=False)
-	most_recent_tweet_id = db.StringProperty()
+    access_key = db.StringProperty()
+    access_secret = db.StringProperty()
+    screen_name = db.StringProperty()
+    twitter_id = db.StringProperty()
+    created = db.DateTimeProperty(auto_now_add=True)
+    disabled = db.BooleanProperty(default=False)
+    account = db.ReferenceProperty(Account)
+    hide_last_values = db.BooleanProperty(default=False)
+    most_recent_tweet_id = db.StringProperty()
 
 class TwitterCheckin(Checkin):
-	owner = db.ReferenceProperty(TwitterAccount)
-	tweet_id = db.StringProperty()
+    owner = db.ReferenceProperty(TwitterAccount)
+    tweet_id = db.StringProperty()

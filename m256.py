@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 #
 # Copyright (c) 2010 Eric Sigler, esigler@gmail.com
@@ -53,159 +54,159 @@ twitter_authorize_url = 'https://api.twitter.com/oauth/authorize'
 twitter_user_timeline_url = 'http://api.twitter.com/1/statuses/user_timeline.json'
 
 def oauth_consumer_request(url, method, consumer_key, consumer_secret):
-	consumer = oauth.Consumer(consumer_key, consumer_secret)
-	client = oauth.Client(consumer)
-	headers = {'User-Agent': 'map256.com:20100617'}
-	return client.request(url, method, headers=headers)
+    consumer = oauth.Consumer(consumer_key, consumer_secret)
+    client = oauth.Client(consumer)
+    headers = {'User-Agent': 'map256.com:20100617'}
+    return client.request(url, method, headers=headers)
 
 def oauth_token_request(url, method, consumer_key, consumer_secret, token_key, token_secret):
-	consumer = oauth.Consumer(consumer_key, consumer_secret)
-	token = oauth.Token(token_key, token_secret)
-	client = oauth.Client(consumer, token)
-	headers = {'User-Agent': 'map256.com:20100617'}
-	return client.request(url, method, headers=headers)
+    consumer = oauth.Consumer(consumer_key, consumer_secret)
+    token = oauth.Token(token_key, token_secret)
+    client = oauth.Client(consumer, token)
+    headers = {'User-Agent': 'map256.com:20100617'}
+    return client.request(url, method, headers=headers)
 
 def foursquare_consumer_request(url, method):
-	resp, content = oauth_consumer_request(url, method, foursquare_consumer_key, foursquare_consumer_secret)
+    resp, content = oauth_consumer_request(url, method, foursquare_consumer_key, foursquare_consumer_secret)
 
-	if resp.status != 200:
-		raise Exception('Invalid response %s.' % resp['status'])
+    if resp.status != 200:
+        raise Exception('Invalid response %s.' % resp['status'])
 
-	return content
+    return content
 
 def foursquare_token_request(url, method, key, secret):
-	resp, content = oauth_token_request(url, method, foursquare_consumer_key, foursquare_consumer_secret, key, secret)
+    resp, content = oauth_token_request(url, method, foursquare_consumer_key, foursquare_consumer_secret, key, secret)
 
-	if resp.status != 200:
-	    raise Exception('Invalid response %s.' % resp['status'])
-	
-	return content
+    if resp.status != 200:
+        raise Exception('Invalid response %s.' % resp['status'])
+    
+    return content
 
 def output_template(app, template_path, variables={}):
-	app.response.headers.add_header('Content-Type', 'text/html; charset=\"utf-8\"')
+    app.response.headers.add_header('Content-Type', 'text/html; charset=\"utf-8\"')
 
-	user = users.get_current_user()
-	if user is None:
-		variables['logged_in'] = False
-	else:
-		variables['logged_in'] = True
-		variables['signout_url'] = users.create_logout_url('/')
+    user = users.get_current_user()
+    if user is None:
+        variables['logged_in'] = False
+    else:
+        variables['logged_in'] = True
+        variables['signout_url'] = users.create_logout_url('/')
 
-	path = os.path.join(os.path.dirname(__file__), template_path)
-	app.response.out.write(template.render(path, variables))
+    path = os.path.join(os.path.dirname(__file__), template_path)
+    app.response.out.write(template.render(path, variables))
 
 def twitter_consumer_request(url, method):
-	consumer = oauth.Consumer(twitter_consumer_key, twitter_consumer_secret)
-	client = oauth.Client(consumer)
-	headers = {'User-Agent': 'map256.com:20100617'}
-	resp, content = client.request(url, method, headers=headers)
+    consumer = oauth.Consumer(twitter_consumer_key, twitter_consumer_secret)
+    client = oauth.Client(consumer)
+    headers = {'User-Agent': 'map256.com:20100617'}
+    resp, content = client.request(url, method, headers=headers)
 
-	if resp.status != 200:
-		raise Exception('Invalid response %s.' % resp['status'])
+    if resp.status != 200:
+        raise Exception('Invalid response %s.' % resp['status'])
 
-	return content
+    return content
 
 def twitter_token_request(url, method, key, secret):
-	consumer = oauth.Consumer(twitter_consumer_key, twitter_consumer_secret)
-	token = oauth.Token(key, secret)
-	client = oauth.Client(consumer, token)
-	headers = {'User-Agent': 'map256.com:20100617'}
-	resp, content = client.request(url, method, headers=headers)
+    consumer = oauth.Consumer(twitter_consumer_key, twitter_consumer_secret)
+    token = oauth.Token(key, secret)
+    client = oauth.Client(consumer, token)
+    headers = {'User-Agent': 'map256.com:20100617'}
+    resp, content = client.request(url, method, headers=headers)
 
-	if resp.status != 200:
-	    raise Exception('Invalid response %s.' % resp['status'])
+    if resp.status != 200:
+        raise Exception('Invalid response %s.' % resp['status'])
 
-	return content
+    return content
 
 def calculate_distance(lat1, lon1, lat2, lon2):
-	#Using Spherical Law of Cosines to determine distance
+    #Using Spherical Law of Cosines to determine distance
 
-	delta = lon2 - lon1
-	a = math.radians(lat1)
-	b = math.radians(lat2)
-	c = math.radians(delta)
-	x = math.sin(a) * math.sin(b) + math.cos(a) * math.cos(b) * math.cos(c)
-	distance = math.acos(x)
-	distance = math.degrees(distance)
-	distance = distance * 60
-	distance = distance * 1.852 #to kilometer
+    delta = lon2 - lon1
+    a = math.radians(lat1)
+    b = math.radians(lat2)
+    c = math.radians(delta)
+    x = math.sin(a) * math.sin(b) + math.cos(a) * math.cos(b) * math.cos(c)
+    distance = math.acos(x)
+    distance = math.degrees(distance)
+    distance = distance * 60
+    distance = distance * 1.852 #to kilometer
 
-	return distance
+    return distance
 
 def get_user_model():
-	user = users.get_current_user()
+    user = users.get_current_user()
 
-	if user is None:
-		raise Exception('User is not logged in!')
+    if user is None:
+        raise Exception('User is not logged in!')
 
-	account = Account.all()
-	account.filter('google_user =', user)
+    account = Account.all()
+    account.filter('google_user =', user)
 
-	if account.count() == 0:
-		account = Account()
-		account.google_user = user
-		#FIXME: Unchecked put
-		account.put()
-		notify_admin('A new map256.com user has been created: %s' % user.nickname())
-	else:
-		account = account.get()
+    if account.count() == 0:
+        account = Account()
+        account.google_user = user
+        #FIXME: Unchecked put
+        account.put()
+        notify_admin('A new map256.com user has been created: %s' % user.nickname())
+    else:
+        account = account.get()
 
-	return account
+    return account
 
 def notify_admin(body):
-	mail.send_mail(sender='Map256 <service@map256.com>',
-	               to='Eric Sigler <esigler@gmail.com>',
-	               subject='Map256 Admin Notification',
-	               body=body)
+    mail.send_mail(sender='Map256 <service@map256.com>',
+                   to='Eric Sigler <esigler@gmail.com>',
+                   subject='Map256 Admin Notification',
+                   body=body)
 
 def output_error(app, admin_description):
-	app.error(500)
-	path = os.path.join(os.path.dirname(__file__), 'templates/error.tmpl')
-	app.response.out.write(template.render(path, {}))
-	notify_admin('ERROR: '+admin_description)
+    app.error(500)
+    path = os.path.join(os.path.dirname(__file__), 'templates/error.tmpl')
+    app.response.out.write(template.render(path, {}))
+    notify_admin('ERROR: '+admin_description)
 
 def output_maintenance(app):
-	app.error(500)
-	path = os.path.join(os.path.dirname(__file__), 'templates/maintenance.tmpl')
-	app.response.out.write(template.render(path, {}))
+    app.error(500)
+    path = os.path.join(os.path.dirname(__file__), 'templates/maintenance.tmpl')
+    app.response.out.write(template.render(path, {}))
 
 def downloaderror_check():
-	recent = memcache.get('urlfetch_count')
+    recent = memcache.get('urlfetch_count')
 
-	if recent is None:
-		memcache.add('urlfetch_count', 1, 150)
-	else:
-		recent = recent + 1
-		memcache.replace('urlfetch_count', recent, 150)
+    if recent is None:
+        memcache.add('urlfetch_count', 1, 150)
+    else:
+        recent = recent + 1
+        memcache.replace('urlfetch_count', recent, 150)
 
-	if recent > 10:
-		notify_admin('High error rate on URL fetches')
+    if recent > 10:
+        notify_admin('High error rate on URL fetches')
 
 #def rate_limit_check(app):
-	#req_ip = memcache.get('iprate_'+app.request.remote_addr)
+    #req_ip = memcache.get('iprate_'+app.request.remote_addr)
 
-	#if req_ip is None:
-		#req_ip = 1
-		#memcache.add('iprate_'+app.request.remote_addr, req_ip, 120)
-	#else:
-		#req_ip = req_ip+1
-		#memcache.replace('iprate_'+app.request.remote_addr, req_ip, 120)
+    #if req_ip is None:
+        #req_ip = 1
+        #memcache.add('iprate_'+app.request.remote_addr, req_ip, 120)
+    #else:
+        #req_ip = req_ip+1
+        #memcache.replace('iprate_'+app.request.remote_addr, req_ip, 120)
 
-	#if req_ip > 10:
-		#self.response.out.write('Rate limiter kicked in, /authorize blocked for 120 seconds')
-		#return
+    #if req_ip > 10:
+        #self.response.out.write('Rate limiter kicked in, /authorize blocked for 120 seconds')
+        #return
 
-		#if resp.status == 403:
-			#recent = memcache.get('fsq_403_'+fsq_id)
+        #if resp.status == 403:
+            #recent = memcache.get('fsq_403_'+fsq_id)
 
-			#if recent is None:
-				#memcache.add('fsq_403_'+fsq_id, 1, 3600)
-			#else:
-				#memcache.replace('fsq_403_'+fsq_id, recent+1, 3600)
+            #if recent is None:
+                #memcache.add('fsq_403_'+fsq_id, 1, 3600)
+            #else:
+                #memcache.replace('fsq_403_'+fsq_id, recent+1, 3600)
 
-			#if recent > 10:
-				#user.foursquare_disabled = True
-				#user.put()
-				#mail.send_mail(sender='Map256 <service@map256.com', to='Eric Sigler <esigler@gmail.com>', subject='Map256 Foursquare 403 error', body='High 403 rate on %s user' % fsq_id )
+            #if recent > 10:
+                #user.foursquare_disabled = True
+                #user.put()
+                #mail.send_mail(sender='Map256 <service@map256.com', to='Eric Sigler <esigler@gmail.com>', subject='Map256 Foursquare 403 error', body='High 403 rate on %s user' % fsq_id )
 
-			#return
+            #return
