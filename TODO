@@ -4,8 +4,6 @@ Fixes in development:
 
 Features in development:
 ---
-- Decouple authorization and callback from a direct Foursquare API call (basically, keep a small batch of requests at the ready)
-
 - Revamp storage of statistics, it's not going to be very workable long term, but would be best done after GA user signup is in place
 
 - Add heat maps
@@ -17,7 +15,6 @@ Features in development:
 Possible features:
 ---
 - Add Gowalla support
-- Add Twitter places support
 - Add Flickr geotagged photos support
 - Add "tweet my history" button
 - Add ability for a user to privately visualize their history
@@ -30,3 +27,4 @@ Completed:
 20100708 - Add ability to remove account & history
 20100708 - Convert Foursquare checkin_id and foursquare_id fields back over to string, per the API docs
 20100715 - Add "-12 hours" privacy support
+201007?? - Add Twitter places support
