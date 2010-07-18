@@ -22,10 +22,12 @@
 # THE SOFTWARE.
 #
 
+import datetime
 import logging
 
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
+from google.appengine.ext import db
 from google.appengine.api.labs import taskqueue
 
 from models import *
@@ -81,9 +83,17 @@ class StatisticsDispatcher(webapp.RequestHandler):
 			for period in periods:
 				taskqueue.add(url='/worker_statistics', params={'period': period, 'kind': kind}, method='GET')
 
+class OauthRequestCleanupDispatcher(webapp.RequestHandler):
+	def get(self):
+		oldest_allowed = datetime.datetime.now() - datetime.timedelta(hours=8)
+		q1 = OauthRequest.all()
+		q1.filter('created <=', oldest_allowed)
+		db.delete(q1.fetch(250))
+
 def main():
 	application = webapp.WSGIApplication([('/cron_foursquare_history', FoursquareHistoryDispatcher),
 										  ('/cron_twitter_history', TwitterHistoryDispatcher),
+										  ('/cron_oauth_request_cleanup', OauthRequestCleanupDispatcher),
 										  ('/cron_statistics', StatisticsDispatcher)],
 		                                  debug=True)
 

@@ -76,6 +76,10 @@ handlers:
   script: cron.py
   login: admin
 
+- url: /cron_oauth_request_cleanup
+  script: cron.py
+  login: admin
+
 - url: /cron_statistics
   script: cron.py
   login: admin
