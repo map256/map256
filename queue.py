@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 #
 # Copyright (c) 2010 Eric Sigler, esigler@gmail.com
@@ -50,212 +51,255 @@ from m256_cfg import *
 from models import *
 import m256
 
+
 class FoursquareHistoryWorker(webapp.RequestHandler):
-	def get(self, fsq_id=None, since=None):
-		logging.info('Handling Foursquare history request')
-		fsq_id = self.request.get('fsq_id')
+    def get(self, fsq_id=None, since=None):
+        logging.info('Handling Foursquare history request')
+        fsq_id = self.request.get('fsq_id')
 
-		q1 = FoursquareAccount.all()
-		q1.filter('foursquare_id = ', str(fsq_id))
+        q1 = FoursquareAccount.all()
+        q1.filter('foursquare_id = ', str(fsq_id))
 
-		if q1.count() != 1:
-			raise Exception('User does not exist')
+        if q1.count() != 1:
+            raise Exception('User does not exist')
 
-		fsq_account = q1.get()
+        fsq_account = q1.get()
 
-		if self.request.get('since'):
-			since = self.request.get('since')
-			request_url = m256.foursquare_history_url+'?l=50&sinceid='+since
-		else:
-			request_url = m256.foursquare_history_url+'?l=50&sinceid=1'
+        if self.request.get('since'):
+            since = self.request.get('since')
+            request_url = m256.foursquare_history_url+'?l=50&sinceid='+since
+        else:
+            request_url = m256.foursquare_history_url+'?l=50&sinceid=1'
 
-		logging.info('Using request URL: %s' % request_url)
+        logging.info('Using request URL: %s' % request_url)
 
-		try:
-			content = m256.foursquare_token_request(request_url, 'GET', fsq_account.access_key, fsq_account.access_secret)
-		except urlfetch.DownloadError:
-			m256.downloaderror_check()
-			return
+        try:
+            content = m256.foursquare_token_request(request_url,
+                                                    'GET',
+                                                    fsq_account.access_key,
+                                                    fsq_account.access_secret)
+        except urlfetch.DownloadError:
+            m256.downloaderror_check()
+            return
 
-		history = simplejson.loads(content)
+        history = simplejson.loads(content)
 
-		if 'checkins' not in history:
-			m256.notify_admin('Malformed response from Foursquare (%s)' % content)
-			return
+        if 'checkins' not in history:
+            m256.notify_admin('Malformed response from Foursquare (%s)' % content)
+            return
 
-		checkins = history['checkins']
-		checkins.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['created'], '%a, %d %b %y %H:%M:%S +0000'), datetime.datetime.strptime(y['created'], '%a, %d %b %y %H:%M:%S +0000')))
+        checkins = history['checkins']
+        checkins.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['created'], '%a, %d %b %y %H:%M:%S +0000'),
+                                          datetime.datetime.strptime(y['created'], '%a, %d %b %y %H:%M:%S +0000')))
 
-		for checkin in checkins:
-			q2 = FoursquareCheckin.all()
-			q2.filter('checkin_id = ', str(checkin['id']))
+        for checkin in checkins:
+            q2 = FoursquareCheckin.all()
+            q2.filter('checkin_id = ', str(checkin['id']))
 
-			if q2.count() == 0:
-				#FIXME: Should verify all of these properties exist before adding
-				logging.info('Dont have existing record, going to create new checkin')
-				ci = FoursquareCheckin()
-				ci.foursquare_id = str(fsq_id)
-				ci.owner = fsq_account
-				ci.location = str(checkin['venue']['geolat'])+','+str(checkin['venue']['geolong'])
+            if q2.count() == 0:
+                #FIXME: Should verify all of these properties exist before adding
+                logging.info('Dont have existing record, going to create new checkin')
+                ci = FoursquareCheckin()
+                ci.foursquare_id = str(fsq_id)
+                ci.owner = fsq_account
+                ci.location = str(checkin['venue']['geolat'])+','+str(checkin['venue']['geolong'])
 
-				if 'shout' in checkin:
-					description = checkin['venue']['name']+' \"'+checkin['shout']+'\"'
-				else:
-					description = checkin['venue']['name']
+                if 'shout' in checkin:
+                    description = checkin['venue']['name']+' \"'+checkin['shout']+'\"'
+                else:
+                    description = checkin['venue']['name']
 
-				ci.description = description
-				ci.checkin_id = str(checkin['id'])
-				ci.occurred = datetime.datetime.strptime(checkin['created'], '%a, %d %b %y %H:%M:%S +0000')
-				ci.account_owner = fsq_account.account
-				ci.put()
+                ci.description = description
+                ci.checkin_id = str(checkin['id'])
+                ci.occurred = datetime.datetime.strptime(checkin['created'], '%a, %d %b %y %H:%M:%S +0000')
+                ci.account_owner = fsq_account.account
+                ci.put()
 
-		if len(history['checkins']) > 1:
-			last = len(history['checkins'])-1
-			last_id = history['checkins'][last]['id']
-			logging.info('Have more than one checkin, enqueing at last_id: %s' % last_id)
-			taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': fsq_account.foursquare_id, 'since': last_id }, method='GET')
+        if len(history['checkins']) > 1:
+            last = len(history['checkins'])-1
+            last_id = history['checkins'][last]['id']
+            logging.info('Have more than one checkin, enqueing at last_id: %s' % last_id)
+            taskqueue.add(url='/worker_foursquare_history',
+                          params={'fsq_id': fsq_account.foursquare_id, 'since': last_id },
+                          method='GET')
 
 class TwitterHistoryWorker(webapp.RequestHandler):
-	def get(self):
-		logging.info('Handling Twitter history request')
-		twitter_id = str(self.request.get('twitter_id'))
+    def get(self):
+        logging.info('Handling Twitter history request')
+        twitter_id = str(self.request.get('twitter_id'))
 
-		q1 = TwitterAccount.all()
-		q1.filter('twitter_id = ', twitter_id)
+        q1 = TwitterAccount.all()
+        q1.filter('twitter_id = ', twitter_id)
 
-		if q1.count() != 1:
-			raise Exception('User does not exist')
+        if q1.count() != 1:
+            raise Exception('User does not exist')
 
-		t_acct = q1.get()
+        t_acct = q1.get()
 
-		if self.request.get('since'):
-			since = self.request.get('since')
-			request_url = m256.twitter_user_timeline_url+'?count=50&since_id='+since
-		elif self.request.get('before'):
-			before = self.request.get('before')
-			request_url = m256.twitter_user_timeline_url+'?count=50&max_id='+before
-		else:
-			request_url = m256.twitter_user_timeline_url+'?count=50'
+        if self.request.get('since'):
+            since = self.request.get('since')
+            request_url = m256.twitter_user_timeline_url+'?count=50&since_id='+since
+        elif self.request.get('before'):
+            before = self.request.get('before')
+            request_url = m256.twitter_user_timeline_url+'?count=50&max_id='+before
+        else:
+            request_url = m256.twitter_user_timeline_url+'?count=50'
 
-		logging.info('Using request URL: %s' % request_url)
+        logging.info('Using request URL: %s' % request_url)
 
-		try:
-			content = m256.twitter_token_request(request_url, 'GET', t_acct.access_key, t_acct.access_secret)
-		except urlfetch.DownloadError:
-			m256.downloaderror_check()
-			return
+        try:
+            content = m256.twitter_token_request(request_url,
+                                                 'GET',
+                                                 t_acct.access_key,
+                                                 t_acct.access_secret)
+        except urlfetch.DownloadError:
+            m256.downloaderror_check()
+            return
 
-		history = simplejson.loads(content)
+        history = simplejson.loads(content)
 
-		for tweet in history:
-			if tweet['geo'] is not None:
-				logging.info('Found geo tweet, ID# %s' % tweet['id'])
-				q2 = TwitterCheckin.all()
-				q2.filter('tweet_id = ', str(tweet['id']))
+        for tweet in history:
+            if tweet['geo'] is not None:
+                logging.info('Found geo tweet, ID# %s' % tweet['id'])
+                q2 = TwitterCheckin.all()
+                q2.filter('tweet_id = ', str(tweet['id']))
 
-				if q2.count() == 0:
-					#FIXME: Should verify all of these properties exist before adding
-					logging.info('Dont have existing record, going to create new checkin')
-					ci = TwitterCheckin()
-					ci.owner = t_acct
-					ci.location = str(tweet['geo']['coordinates'][0])+','+str(tweet['geo']['coordinates'][1])
-					ci.tweet_id = str(tweet['id'])
-					ci.description = tweet['text']
-					ci.occurred = datetime.datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
-					ci.account_owner = t_acct.account
-					ci.put()
+                if q2.count() == 0:
+                    #FIXME: Should verify all of these properties exist before adding
+                    logging.info('Dont have existing record, going to create new checkin')
+                    ci = TwitterCheckin()
+                    ci.owner = t_acct
+                    ci.location = str(tweet['geo']['coordinates'][0])+','+str(tweet['geo']['coordinates'][1])
+                    ci.tweet_id = str(tweet['id'])
+                    ci.description = tweet['text']
+                    ci.occurred = datetime.datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
+                    ci.account_owner = t_acct.account
+                    ci.put()
 
-		if len(history) > 1:
-			if self.request.get('since'):
-				logging.info('Have more than one tweet, enqueing since last_id: %s' % history[0]['id'])
-				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'since': history[0]['id']}, method='GET')
-			elif self.request.get('before'):
-				logging.info('Have more than one tweet, enqueing before last_id: %s' % history[len(history)-1]['id'])
-				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'before': history[len(history)-1]['id']}, method='GET')
-			else:
-				logging.info('Have more than one tweet, enqueing since last_id: %s and before last_id: %s' % (history[0]['id'], history[len(history)-1]['id']))
-				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'since': history[0]['id']}, method='GET')
-				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'before': history[len(history)-1]['id']}, method='GET')
-		else:
-			if self.request.get('since'):
-				t_acct.most_recent_tweet_id = self.request.get('since')
-				t_acct.put() #FIXME: Not very race condition proof, but does at least get this bug out of the way for now.
+        if len(history) > 1:
+            if self.request.get('since'):
+                logging.info('Have more than one tweet, enqueing since last_id: %s' % history[0]['id'])
+                taskqueue.add(url='/worker_twitter_history',
+                              params={'twitter_id': t_acct.twitter_id, 'since': history[0]['id']},
+                              method='GET')
+
+            elif self.request.get('before'):
+                logging.info('Have more than one tweet, enqueing before last_id: %s' % history[len(history)-1]['id'])
+                taskqueue.add(url='/worker_twitter_history',
+                              params={'twitter_id': t_acct.twitter_id, 'before': history[len(history)-1]['id']},
+                              method='GET')
+
+            else:
+                logging.info('Have more than one tweet, enqueing since last_id: %s and before last_id: %s' % (history[0]['id'], history[len(history)-1]['id']))
+                taskqueue.add(url='/worker_twitter_history',
+                              params={'twitter_id': t_acct.twitter_id, 'since': history[0]['id']},
+                              method='GET')
+                taskqueue.add(url='/worker_twitter_history',
+                              params={'twitter_id': t_acct.twitter_id, 'before': history[len(history)-1]['id']},
+                              method='GET')
+
+        else:
+            if self.request.get('since'):
+                t_acct.most_recent_tweet_id = self.request.get('since')
+                t_acct.put() #FIXME: Not very race condition proof
 
 class StatisticsWorker(webapp.RequestHandler):
-	def get(self, kind=None, period=None):
-		kind = self.request.get('kind')
-		period = self.request.get('period')
+    def get(self, kind=None, period=None):
+        kind = self.request.get('kind')
+        period = self.request.get('period')
 
-		if period == 'week':
-			start_date = datetime.datetime.now()
-			delta = datetime.timedelta(days=start_date.weekday(), hours=start_date.hour, minutes=start_date.minute, seconds=start_date.second+1)
-			start_date = start_date - delta
-		elif period == 'month':
-			start_date = datetime.datetime.now()
-			delta = datetime.timedelta(days=start_date.day-1, hours=start_date.hour, minutes=start_date.minute, seconds=start_date.second+1)
-			start_date = start_date - delta
-		elif period == 'alltime':
-			start_date = datetime.date(2005, 1, 1)
-		else:
-			raise Exception('Invalid period!')
+        if period == 'week':
+            start_date = datetime.datetime.now()
+            delta = datetime.timedelta(days=start_date.weekday(),
+                                       hours=start_date.hour,
+                                       minutes=start_date.minute,
+                                       seconds=start_date.second+1)
+            start_date = start_date - delta
 
-		listing = {}
+        elif period == 'month':
+            start_date = datetime.datetime.now()
+            delta = datetime.timedelta(days=start_date.day-1,
+                                       hours=start_date.hour,
+                                       minutes=start_date.minute,
+                                       seconds=start_date.second+1)
+            start_date = start_date - delta
 
-		if kind == 'checkin_speed':
-			checkins = FoursquareCheckin.all()
-			checkins.filter('occurred >= ', start_date)
+        elif period == 'alltime':
+            start_date = datetime.date(2005, 1, 1)
 
-			for checkin in checkins:
-				if listing.has_key(str(checkin.foursquare_id)):
-					listing[str(checkin.foursquare_id)] = (listing[str(checkin.foursquare_id)] + checkin.velocity) / 2
-				else:
-					listing[str(checkin.foursquare_id)] = checkin.velocity
+        else:
+            raise Exception('Invalid period!')
 
-			from operator import itemgetter
-			results = simplejson.dumps(sorted(listing.iteritems(), key=itemgetter(1), reverse=True))
+        listing = {}
 
-		elif kind == 'distance_traveled':
-			checkins = FoursquareCheckin.all()
-			checkins.filter('occurred >= ', start_date)
+        if kind == 'checkin_speed':
+            checkins = FoursquareCheckin.all()
+            checkins.filter('occurred >= ', start_date)
 
-			for checkin in checkins:
-				if listing.has_key(str(checkin.foursquare_id)):
-					listing[str(checkin.foursquare_id)] = listing[str(checkin.foursquare_id)] + checkin.distance_traveled
-				else:
-					listing[str(checkin.foursquare_id)] = checkin.distance_traveled
+            for checkin in checkins:
+                ci_fsq_id = str(checkin.foursquare_id)
 
-			from operator import itemgetter
-			results = simplejson.dumps(sorted(listing.iteritems(), key=itemgetter(1), reverse=True))
+                if listing.has_key(ci_fsq_id):
+                    listing[ci_fsq_id] = (listing[ci_fsq_id] + checkin.velocity) / 2
+                else:
+                    listing[ci_fsq_id] = checkin.velocity
 
-		elif kind == 'number_checkins':
-			listing = {}
-			users = FoursquareAccount.all()
+            from operator import itemgetter
+            results = simplejson.dumps(sorted(listing.iteritems(),
+                                              key=itemgetter(1),
+                                              reverse=True))
 
-			for user in users:
-				q1 = FoursquareCheckin.all()
-				q1.filter('foursquare_id = ', str(user.foursquare_id))
-				q1.filter('occurred >= ', start_date)
+        elif kind == 'distance_traveled':
+            checkins = FoursquareCheckin.all()
+            checkins.filter('occurred >= ', start_date)
 
-				listing[str(user.foursquare_id)] = q1.count()
+            for checkin in checkins:
+                ci_fsq_id = str(checkin.foursquare_id)
 
-			from operator import itemgetter
-			results =  simplejson.dumps(sorted(listing.iteritems(), key=itemgetter(1), reverse=True))
+                if listing.has_key(ci_fsq_id):
+                    listing[ci_fsq_id] = listing[ci_fsq_id] + checkin.distance_traveled
+                else:
+                    listing[ci_fsq_id] = checkin.distance_traveled
 
-		else:
-			raise Exception('Invalid kind!')
+            from operator import itemgetter
+            results = simplejson.dumps(sorted(listing.iteritems(),
+                                              key=itemgetter(1),
+                                              reverse=True))
 
-		stat = GeneratedStatistic()
-		stat.description = kind + '_' + period
-		stat.contents = results
-		stat.put()
+        elif kind == 'number_checkins':
+            listing = {}
+            users = FoursquareAccount.all()
+
+            for user in users:
+                q1 = FoursquareCheckin.all()
+                q1.filter('foursquare_id = ', str(user.foursquare_id))
+                q1.filter('occurred >= ', start_date)
+
+                listing[str(user.foursquare_id)] = q1.count()
+
+            from operator import itemgetter
+            results =  simplejson.dumps(sorted(listing.iteritems(),
+                                               key=itemgetter(1),
+                                               reverse=True))
+
+        else:
+            raise Exception('Invalid kind!')
+
+        stat = GeneratedStatistic()
+        stat.description = kind + '_' + period
+        stat.contents = results
+        stat.put()
 
 def main():
-	application = webapp.WSGIApplication([('/worker_foursquare_history', FoursquareHistoryWorker),
-										  ('/worker_twitter_history', TwitterHistoryWorker),
-										  ('/worker_statistics', StatisticsWorker)],
-		                                  debug=True)
 
-	util.run_wsgi_app(application)
+    routes = [
+        ('/worker_foursquare_history', FoursquareHistoryWorker),
+        ('/worker_twitter_history', TwitterHistoryWorker),
+        ('/worker_statistics', StatisticsWorker)
+    ]
+
+    application = webapp.WSGIApplication(routes, debug=True)
+    util.run_wsgi_app(application)
 
 if __name__ == '__main__':
-	main()
+    main()

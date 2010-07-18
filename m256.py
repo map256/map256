@@ -106,7 +106,7 @@ def twitter_consumer_request(url, method):
 	return content
 
 def twitter_token_request(url, method, key, secret):
-	consumer = oauth.Consumer(consumer_key, consumer_secret)
+	consumer = oauth.Consumer(twitter_consumer_key, twitter_consumer_secret)
 	token = oauth.Token(key, secret)
 	client = oauth.Client(consumer, token)
 	headers = {'User-Agent': 'map256.com:20100617'}
