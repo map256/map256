@@ -24,6 +24,10 @@ handlers:
   script: app.py
   login: required
 
+- url: /account_hide_toggle
+  script: app.py
+  login: required
+
 - url: /foursquare_authorization
   script: app.py
   login: required
@@ -33,10 +37,6 @@ handlers:
   login: required
 
 - url: /foursquare_account_delete
-  script: app.py
-  login: required
-
-- url: /foursquare_account_hide_toggle
   script: app.py
   login: required
 

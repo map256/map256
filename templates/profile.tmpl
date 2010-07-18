@@ -18,9 +18,9 @@
 			<li><a href="/f/{{ foursquare_account.foursquare_id}}">{{ foursquare_account.foursquare_id}}</a>
 {% endif %}
 {% if foursquare_account.hide_last_values %}
-			(<a href="/foursquare_account_hide_toggle?fsq_id={{ foursquare_account.foursquare_id }}">show last 24hrs</a>)
+			(<a href="/account_hide_toggle?acc_type=fsq&amp;fsq_id={{ foursquare_account.foursquare_id }}">show last 24hrs</a>)
 {% else %}
-			(<a href="/foursquare_account_hide_toggle?fsq_id={{ foursquare_account.foursquare_id }}">hide last 24hrs</a>)
+			(<a href="/account_hide_toggle?acc_type=fsq&amp;fsq_id={{ foursquare_account.foursquare_id }}">hide last 24hrs</a>)
 {% endif %}
 			(<a href="/foursquare_account_delete?fsq_id={{ foursquare_account.foursquare_id }}">delete</a>)</li>
 {% endfor %}
@@ -30,7 +30,15 @@
 		<h2>Twitter Accounts:</h2>
 		<ul>
 {% for twitter_account in twitter_accounts %}
-			<li><a href="/t/{{ twitter_account.screen_name}}">{{ twitter_account.screen_name}}</a> (<a href="/twitter_account_delete?twitter_id={{ twitter_account.twitter_id }}">delete</a>)</li>
+			<li>
+				<a href="/t/{{ twitter_account.screen_name}}">{{ twitter_account.screen_name}}</a>
+			{% if twitter_account.hide_last_values %}
+						(<a href="/account_hide_toggle?acc_type=twitter&amp;twit_id={{ twitter_account.twitter_id }}">show last 24hrs</a>)
+			{% else %}
+						(<a href="/account_hide_toggle?acc_type=twitter&amp;twit_id={{ twitter_account.twitter_id }}">hide last 24hrs</a>)
+			{% endif %}
+			    (<a href="/twitter_account_delete?twitter_id={{ twitter_account.twitter_id }}">delete</a>)
+			</li>
 {% endfor %}
 				</ul>
 				<p><a href="/twitter_authorization">Add a Twitter account</a></p>

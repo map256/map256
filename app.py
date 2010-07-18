@@ -49,479 +49,516 @@ from models import *
 
 class FrontHandler(webapp.RequestHandler):
     def get(self):
-		frontpage_userlist = memcache.get('frontpage_userlist')
+        frontpage_userlist = memcache.get('frontpage_userlist')
 
-		if frontpage_userlist is None:
+        if frontpage_userlist is None:
 
-			q1 = FoursquareAccount.all()
-			q1.filter('foursquare_disabled =', False)
+            q1 = FoursquareAccount.all()
+            q1.filter('foursquare_disabled =', False)
 
-			fsq_accounts = {}
+            fsq_accounts = {}
 
-			for fsq_account in q1:
-				q2 = FoursquareCheckin.all()
-				q2.filter('owner = ', fsq_account)
-				q2.order('-occurred')
-				r2 = q2.fetch(10)
-				tmpa = []
+            for fsq_account in q1:
+                q2 = FoursquareCheckin.all()
+                q2.filter('owner = ', fsq_account)
+                q2.order('-occurred')
+                r2 = q2.fetch(10)
+                tmpa = []
 
-				for res2 in r2:
-					tmpa.append(str(res2.location))
+                for res2 in r2:
+                    tmpa.append(str(res2.location))
 
-				fsq_accounts[str(fsq_account.foursquare_id)] = tmpa
+                fsq_accounts[str(fsq_account.foursquare_id)] = tmpa
 
-			frontpage_userlist = simplejson.dumps(fsq_accounts)
-			memcache.add('frontpage_userlist', frontpage_userlist, 300)
+            frontpage_userlist = simplejson.dumps(fsq_accounts)
+            memcache.add('frontpage_userlist', frontpage_userlist, 300)
 
-		m256.output_template(self, 'templates/front.tmpl', {'frontpage_userlist': frontpage_userlist})
+        m256.output_template(self, 'templates/front.tmpl', {'frontpage_userlist': frontpage_userlist})
 
 #FIXME: To sanitize
 class LookupHandler(webapp.RequestHandler):
-	def get(self, handle=None):
-		if handle is None:
-			return
+    def get(self, handle=None):
+        if handle is None:
+            return
 
-		cached = memcache.get('lookup_'+handle)
+        cached = memcache.get('lookup_'+handle)
 
-		if cached is not None:
-			m256.output_template(self, 'templates/map.tmpl', {'account_key': cached})
-			return
+        if cached is not None:
+            m256.output_template(self, 'templates/map.tmpl', {'account_key': cached})
+            return
 
-		q1 = FoursquareAccount.all()
-		q1.filter('twitter_username =', str(handle))
+        q1 = FoursquareAccount.all()
+        q1.filter('twitter_username =', str(handle))
 
-		if q1.count() == 1:
-			f_account = q1.get()
-			key = f_account.account.key()
-			m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
-			memcache.add('lookup_'+handle, key, 5)
-			return
+        if q1.count() == 1:
+            f_account = q1.get()
+            key = f_account.account.key()
+            m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
+            memcache.add('lookup_'+handle, key, 5)
+            return
 
-		q2 = FoursquareAccount.all()
-		q2.filter('foursquare_id =', str(handle))
+        q2 = FoursquareAccount.all()
+        q2.filter('foursquare_id =', str(handle))
 
-		if q2.count() == 1:
-			f_account = q2.get()
-			key = f_account.account.key()
-			m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
-			memcache.add('lookup_'+handle, key, 5)
-			return
+        if q2.count() == 1:
+            f_account = q2.get()
+            key = f_account.account.key()
+            m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
+            memcache.add('lookup_'+handle, key, 5)
+            return
 
-		q3 = TwitterAccount.all()
-		q3.filter('screen_name =', str(handle))
+        q3 = TwitterAccount.all()
+        q3.filter('screen_name =', str(handle))
 
-		if q3.count() == 1:
-			t_account = q3.get()
-			key = t_account.account.key()
-			m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
-			memcache.add('lookup_'+handle, key, 5)
-			return
+        if q3.count() == 1:
+            t_account = q3.get()
+            key = t_account.account.key()
+            m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
+            memcache.add('lookup_'+handle, key, 5)
+            return
 
-		q4 = TwitterAccount.all()
-		q4.filter('twitter_id =', str(handle))
+        q4 = TwitterAccount.all()
+        q4.filter('twitter_id =', str(handle))
 
-		if q4.count() == 1:
-			t_account = q4.get()
-			key = t_account.account.key()
-			m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
-			memcache.add('lookup_'+handle, key, 5)
-			return
+        if q4.count() == 1:
+            t_account = q4.get()
+            key = t_account.account.key()
+            m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
+            memcache.add('lookup_'+handle, key, 5)
+            return
 
-		self.response.out.write('Sorry, but I cant find a matching user')
+        self.response.out.write('Sorry, but I cant find a matching user')
 
 #FIXME: To sanitize
 class ScoreboardHandler(webapp.RequestHandler):
-	def get(self):
-		periods = ('week', 'month', 'alltime')
-		kinds = ('checkin_speed', 'distance_traveled', 'number_checkins')
-		template_values = {}
+    def get(self):
+        periods = ('week', 'month', 'alltime')
+        kinds = ('checkin_speed', 'distance_traveled', 'number_checkins')
+        template_values = {}
 
-		for kind in kinds:
-			for period in periods:
-				q = GeneratedStatistic.all()
-				q.filter('description =', kind + '_' + period)
-				q.order('-created')
-				r = q.get()
-				template_values[kind + '_' + period] = simplejson.loads(r.contents)
+        for kind in kinds:
+            for period in periods:
+                q = GeneratedStatistic.all()
+                q.filter('description =', kind + '_' + period)
+                q.order('-created')
+                r = q.get()
+                template_values[kind + '_' + period] = simplejson.loads(r.contents)
 
-		m256.output_template(self, 'templates/scoreboard.tmpl', template_values)
+        m256.output_template(self, 'templates/scoreboard.tmpl', template_values)
 
 class ProfileHandler(webapp.RequestHandler):
-	def get(self):
-		account = m256.get_user_model()
-		template_values = {}
+    def get(self):
+        account = m256.get_user_model()
+        template_values = {}
 
-		q1 = FoursquareAccount.all()
-		q1.filter('account =', account)
-		template_values['foursquare_accounts'] = q1.fetch(25)
+        q1 = FoursquareAccount.all()
+        q1.filter('account =', account)
+        template_values['foursquare_accounts'] = q1.fetch(25)
 
-		q2 = TwitterAccount.all()
-		q2.filter('account =', account)
-		template_values['twitter_accounts'] = q2.fetch(25)
+        q2 = TwitterAccount.all()
+        q2.filter('account =', account)
+        template_values['twitter_accounts'] = q2.fetch(25)
 
-		template_values['nickname'] = account.google_user.nickname()
+        template_values['nickname'] = account.google_user.nickname()
 
-		m256.output_template(self, 'templates/profile.tmpl', template_values)
+        m256.output_template(self, 'templates/profile.tmpl', template_values)
 
 #FIXME: To sanitize
 class DataHandler(webapp.RequestHandler):
-	def get(self, key=None):
-		data = memcache.get('checkindata_'+key)
-		self.response.headers.add_header('Content-Type', 'application/json')
+    def get(self, key=None):
+        data = memcache.get('checkindata_'+key)
+        self.response.headers.add_header('Content-Type', 'application/json')
 
-		if data is None:
-			data = []
+        if data is None:
+            data = []
 
-			try:
-				k1 = db.Key(key)
-			except:
-				self.response.out.write('A')
-				return
+            try:
+                k1 = db.Key(key)
+            except:
+                self.response.out.write('A')
+                return
 
-			user = Account.get(k1)
+            user = Account.get(k1)
 
-			if user is None:
-				self.response.out.write('B')
-				return
+            if user is None:
+                self.response.out.write('B')
+                return
 
-			checkins = Checkin.all()
-			checkins.filter('account_owner =', user)
+            checkins = Checkin.all()
+            checkins.filter('account_owner =', user)
 
-			if checkins.count() == 0:
-				self.response.out.write('C')
-				return
+            if checkins.count() == 0:
+                self.response.out.write('C')
+                return
 
-			for checkin in checkins:
-				info = {}
+            for checkin in checkins:
+                info = {}
 
-				if checkin.owner.hide_last_values:
-					td = datetime.timedelta(days=1)
+                if checkin.owner.hide_last_values:
+                    td = datetime.timedelta(days=1)
 
-					if (datetime.datetime.now() - checkin.occurred) < td:
-						continue
+                    if (datetime.datetime.now() - checkin.occurred) < td:
+                        continue
 
-				info['location'] = str(checkin.location)
-				info['occurred'] = str(checkin.occurred)
-				#FIXME: So, turns out some browsers doing JSON decoding dont parse Unicode properly.  Dropping chars for now, need to find better libs later.
-				info['description'] = checkin.description.encode('ascii', 'replace')
-				#FIXME: At some point should pretty print this, and set it to a saner timezone
-				info['occurred'] = str(checkin.occurred)
-				data.append(info)
+                info['location'] = str(checkin.location)
+                info['occurred'] = str(checkin.occurred)
+                #FIXME: So, turns out some browsers doing JSON decoding dont parse Unicode properly.  Dropping chars for now, need to find better libs later.
+                info['description'] = checkin.description.encode('ascii', 'replace')
+                #FIXME: At some point should pretty print this, and set it to a saner timezone
+                info['occurred'] = str(checkin.occurred)
+                data.append(info)
 
-			data.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['occurred'], '%Y-%m-%d %H:%M:%S'),
-			                              datetime.datetime.strptime(y['occurred'], '%Y-%m-%d %H:%M:%S')), reverse=True)
+            data.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['occurred'], '%Y-%m-%d %H:%M:%S'),
+                                          datetime.datetime.strptime(y['occurred'], '%Y-%m-%d %H:%M:%S')), reverse=True)
 
-			encoded = simplejson.dumps(data)
-			memcache.add('checkindata_'+key, encoded, 60)
-			self.response.out.write(encoded)
-		else:
-			self.response.out.write(data)
+            encoded = simplejson.dumps(data)
+            memcache.add('checkindata_'+key, encoded, 60)
+            self.response.out.write(encoded)
+        else:
+            self.response.out.write(data)
 
 class FoursquareAuthorizationHandler(webapp.RequestHandler):
-	def get(self):
+    def get(self):
 
-		try:
-			content = m256.foursquare_consumer_request(m256.foursquare_request_token_url, 'GET')
-		except urlfetch.DownloadError:
-			m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_request_token_url)
-			return
+        try:
+            content = m256.foursquare_consumer_request(m256.foursquare_request_token_url, 'GET')
+        except urlfetch.DownloadError:
+            m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_request_token_url)
+            return
 
-		request_token = dict(cgi.parse_qsl(content))
+        request_token = dict(cgi.parse_qsl(content))
 
-		if 'oauth_token' not in request_token:
-			m256.output_error(self, 'Foursquare request token response was invalid')
-			return
+        if 'oauth_token' not in request_token:
+            m256.output_error(self, 'Foursquare request token response was invalid')
+            return
 
-		if 'oauth_token_secret' not in request_token:
-			m256.output_error(self, 'Foursquare request token response was invalid')
-			return
+        if 'oauth_token_secret' not in request_token:
+            m256.output_error(self, 'Foursquare request token response was invalid')
+            return
 
-		req = OauthRequest()
-		req.request_key = request_token['oauth_token']
-		req.request_secret = request_token['oauth_token_secret']
+        req = OauthRequest()
+        req.request_key = request_token['oauth_token']
+        req.request_secret = request_token['oauth_token_secret']
 
-		try:
-			req.put()
-		except CapabilityDisabledError:
-			m256.output_maintenance(self)
-			return
+        try:
+            req.put()
+        except CapabilityDisabledError:
+            m256.output_maintenance(self)
+            return
 
-		url = m256.foursquare_authorize_url+'?oauth_token='+req.request_key
-		m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Foursquare'})
+        url = m256.foursquare_authorize_url+'?oauth_token='+req.request_key
+        m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Foursquare'})
 
 class FoursquareCallbackHandler(webapp.RequestHandler):
-	def get(self):
-		arg = self.request.get('oauth_token')
-		q1 = OauthRequest.all()
-		q1.filter('request_key = ', arg)
+    def get(self):
+        arg = self.request.get('oauth_token')
+        q1 = OauthRequest.all()
+        q1.filter('request_key = ', arg)
 
-		if q1.count() < 1:
-			#FIXME: Should be self.redirect('/foursquare_authorization')
-			raise Exception('Invalid request (key does not exist)')
+        if q1.count() < 1:
+            #FIXME: Should be self.redirect('/foursquare_authorization')
+            raise Exception('Invalid request (key does not exist)')
 
-		req = q1.get()
+        req = q1.get()
 
-		try:
-			content = m256.foursquare_token_request(m256.foursquare_access_token_url, 'POST', req.request_key, req.request_secret)
-		except urlfetch.DownloadError:
-			m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_access_token_url)
-			return
+        try:
+            content = m256.foursquare_token_request(m256.foursquare_access_token_url, 'POST', req.request_key, req.request_secret)
+        except urlfetch.DownloadError:
+            m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_access_token_url)
+            return
 
-		access_token = dict(cgi.parse_qsl(content))
+        access_token = dict(cgi.parse_qsl(content))
 
-		if 'oauth_token' not in access_token:
-			m256.output_error(self, 'Foursquare access token response was invalid')
-			return
+        if 'oauth_token' not in access_token:
+            m256.output_error(self, 'Foursquare access token response was invalid')
+            return
 
-		if 'oauth_token' not in access_token:
-			m256.output_error(self, 'Foursquare access token response was invalid')
-			return
+        if 'oauth_token' not in access_token:
+            m256.output_error(self, 'Foursquare access token response was invalid')
+            return
 
-		try:
-			content = m256.foursquare_token_request(m256.foursquare_userdetail_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
-		except urlfetch.DownloadError:
-			m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_userdetail_url)
-			return
+        try:
+            content = m256.foursquare_token_request(m256.foursquare_userdetail_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
+        except urlfetch.DownloadError:
+            m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_userdetail_url)
+            return
 
-		userinfo = simplejson.loads(content)
+        userinfo = simplejson.loads(content)
 
-		if 'user' not in userinfo:
-			m256.output_error(self, 'Foursquare user detail response was invalid')
+        if 'user' not in userinfo:
+            m256.output_error(self, 'Foursquare user detail response was invalid')
 
-		if 'id' not in userinfo['user']:
-			m256.output_error(self, 'Foursquare user detail response was invalid')
+        if 'id' not in userinfo['user']:
+            m256.output_error(self, 'Foursquare user detail response was invalid')
 
-		q2 = FoursquareAccount.all()
-		q2.filter('foursquare_id = ', str(userinfo['user']['id']))
+        q2 = FoursquareAccount.all()
+        q2.filter('foursquare_id = ', str(userinfo['user']['id']))
 
-		if q2.count() > 0:
-			self.redirect('/profile')
-			return
+        if q2.count() > 0:
+            self.redirect('/profile')
+            return
 
-		new_account = FoursquareAccount()
-		new_account.access_key = access_token['oauth_token']
-		new_account.access_secret = access_token['oauth_token_secret']
-		new_account.foursquare_id = str(userinfo['user']['id'])
-		new_account.account = m256.get_user_model()
+        new_account = FoursquareAccount()
+        new_account.access_key = access_token['oauth_token']
+        new_account.access_secret = access_token['oauth_token_secret']
+        new_account.foursquare_id = str(userinfo['user']['id'])
+        new_account.account = m256.get_user_model()
 
-		if 'twitter' in userinfo['user']:
-			new_account.twitter_username = userinfo['user']['twitter']
+        if 'twitter' in userinfo['user']:
+            new_account.twitter_username = userinfo['user']['twitter']
 
-		try:
-			new_account.put()
-		except CapabilityDisabledError:
-			m256.output_maintenance(self)
-			return
+        try:
+            new_account.put()
+        except CapabilityDisabledError:
+            m256.output_maintenance(self)
+            return
 
-		taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': new_account.foursquare_id}, method='GET')
+        taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': new_account.foursquare_id}, method='GET')
 
-		url = '/f/'+new_account.foursquare_id
-		m256.output_template(self, 'templates/callback.tmpl', {'map_url': url})
-		m256.notify_admin("New Foursquare account added: http://www.map256.com/f/%s" % new_account.foursquare_id)
+        url = '/f/'+new_account.foursquare_id
+        m256.output_template(self, 'templates/callback.tmpl', {'map_url': url})
+        m256.notify_admin("New Foursquare account added: http://www.map256.com/f/%s" % new_account.foursquare_id)
 
 class FoursquareAccountDeleteHandler(webapp.RequestHandler):
-	def get(self):
-		fsq_id = str(self.request.get('fsq_id'))
-		u_acc = m256.get_user_model()
+    def get(self):
+        fsq_id = str(self.request.get('fsq_id'))
+        u_acc = m256.get_user_model()
 
-		q1 = FoursquareAccount.all()
-		q1.filter('foursquare_id =', fsq_id)
-		q1.filter('account =', u_acc)
+        q1 = FoursquareAccount.all()
+        q1.filter('foursquare_id =', fsq_id)
+        q1.filter('account =', u_acc)
 
-		if q1.count() != 0:
-			#FIXME: Uh, filtering on a single property here.  50?
-			r1 = q1.fetch(50)
+        if q1.count() != 0:
+            #FIXME: Uh, filtering on a single property here.  50?
+            r1 = q1.fetch(50)
 
-			for fsq_account in r1:
-				q2 = FoursquareCheckin.all(keys_only=True)
-				q2.filter('owner =', fsq_account)
+            for fsq_account in r1:
+                q2 = FoursquareCheckin.all(keys_only=True)
+                q2.filter('owner =', fsq_account)
 
-				try:
-					db.delete(q2.fetch(1000)) #FIXME: Won't delete all
-					fsq_account.delete()
-				except CapabilityDisabledError:
-					m256.output_maintenance(self)
-					return
+                try:
+                    db.delete(q2.fetch(1000)) #FIXME: Won't delete all
+                    fsq_account.delete()
+                except CapabilityDisabledError:
+                    m256.output_maintenance(self)
+                    return
 
-			m256.output_template(self, 'templates/account_deleted.tmpl')
-		else:
-			self.redirect('/profile')
+            m256.output_template(self, 'templates/account_deleted.tmpl')
+        else:
+            self.redirect('/profile')
 
-class FoursquareAccountHideToggle(webapp.RequestHandler):
-	def get(self):
-		fsq_id = str(self.request.get('fsq_id'))
-		u_acc = m256.get_user_model()
+class AccountHideToggle(webapp.RequestHandler):
+    def get(self):
+        acc_type = str(self.request.get('acc_type'))
 
-		q1 = FoursquareAccount.all()
-		q1.filter('foursquare_id =', fsq_id)
-		q1.filter('account =', u_acc)
+        if acc_type == 'fsq':
+            fsq_id = str(self.request.get('fsq_id'))
+            u_acc = m256.get_user_model()
 
-		if q1.count() != 0:
-			fsq_account = q1.get()
+            q1 = FoursquareAccount.all()
+            q1.filter('foursquare_id =', fsq_id)
+            q1.filter('account =', u_acc)
 
-			if fsq_account.hide_last_values:
-				fsq_account.hide_last_values = False
-			else:
-				#FIXME: Should try to invalidate all memcache entries associated with this
-				fsq_account.hide_last_values = True
+            if q1.count() != 0:
+                fsq_account = q1.get()
 
-			try:
-				fsq_account.put()
-			except CapabilityDisabledError:
-				m256.output_maintenance(self)
-				return
+                if fsq_account.hide_last_values:
+                    fsq_account.hide_last_values = False
+                else:
+                    #FIXME: Should try to invalidate all memcache entries associated with this
+                    fsq_account.hide_last_values = True
 
-			self.redirect('/profile')
-		else:
-			self.redirect('/profile')
+                try:
+                    fsq_account.put()
+                except CapabilityDisabledError:
+                    m256.output_maintenance(self)
+                    return
+
+                self.redirect('/profile')
+            else:
+                self.redirect('/profile')
+
+        elif acc_type == 'twitter':
+            twit_id = str(self.request.get('twit_id'))
+            u_acc = m256.get_user_model()
+
+            q1 = TwitterAccount.all()
+            q1.filter('twitter_id =', twit_id)
+            q1.filter('account =', u_acc)
+
+            if q1.count() != 0:
+                twit_account = q1.get()
+
+                if twit_account.hide_last_values:
+                    twit_account.hide_last_values = False
+                else:
+                    #FIXME: Should try to invalidate all memcache entries associated with this
+                    twit_account.hide_last_values = True
+
+                try:
+                    twit_account.put()
+                except CapabilityDisabledError:
+                    m256.output_maintenance(self)
+                    return
+
+                self.redirect('/profile')
+            else:
+                self.redirect('/profile')
+
+        else:
+            self.redirect('/profile')
 
 class TwitterAuthorizationHandler(webapp.RequestHandler):
-	def get(self):
-		try:
-			result = m256.twitter_consumer_request(m256.twitter_request_token_url, 'POST')
-		except urlfetch.DownloadError:
-			m256.output_error(self, 'DownloadError requesting %s' % m256.twitter_request_token_url)
-			return
+    def get(self):
+        try:
+            result = m256.twitter_consumer_request(m256.twitter_request_token_url, 'POST')
+        except urlfetch.DownloadError:
+            m256.output_error(self, 'DownloadError requesting %s' % m256.twitter_request_token_url)
+            return
 
-		request_token = dict(cgi.parse_qsl(result))
+        request_token = dict(cgi.parse_qsl(result))
 
-		if 'oauth_token' not in request_token:
-			m256.output_error(self, 'Twitter request token response was invalid')
-			return
+        if 'oauth_token' not in request_token:
+            m256.output_error(self, 'Twitter request token response was invalid')
+            return
 
-		if 'oauth_token_secret' not in request_token:
-			m256.output_error(self, 'Twitter request token response was invalid')
-			return
+        if 'oauth_token_secret' not in request_token:
+            m256.output_error(self, 'Twitter request token response was invalid')
+            return
 
-		req = OauthRequest()
-		req.request_key = request_token['oauth_token']
-		req.request_secret = request_token['oauth_token_secret']
+        req = OauthRequest()
+        req.request_key = request_token['oauth_token']
+        req.request_secret = request_token['oauth_token_secret']
 
-		try:
-			req.put()
-		except CapabilityDisabledError:
-			m256.output_maintenance(self)
-			return
+        try:
+            req.put()
+        except CapabilityDisabledError:
+            m256.output_maintenance(self)
+            return
 
-		url = m256.twitter_authorize_url+'?oauth_token='+req.request_key
-		m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Twitter'})
+        url = m256.twitter_authorize_url+'?oauth_token='+req.request_key
+        m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Twitter'})
 
 class TwitterCallbackHandler(webapp.RequestHandler):
-	def get(self):
-		arg = self.request.get('oauth_token')
-		q1 = OauthRequest.all()
-		q1.filter('request_key = ', arg)
+    def get(self):
+        arg = self.request.get('oauth_token')
+        q1 = OauthRequest.all()
+        q1.filter('request_key = ', arg)
 
-		if q1.count() < 1:
-			#FIXME: Should be self.redirect('/foursquare_authorization')
-			raise Exception('Invalid request (key does not exist)')
+        if q1.count() < 1:
+            #FIXME: Should be self.redirect('/foursquare_authorization')
+            raise Exception('Invalid request (key does not exist)')
 
-		req = q1.get()
+        req = q1.get()
 
-		try:
-			content = m256.twitter_token_request(m256.twitter_access_token_url, 'POST', req.request_key, req.request_secret)
-		except urlfetch.DownloadError:
-			m256.output_error(self, 'DownloadError requesting %s' % m256.twitter_access_token_url)
-			return
+        try:
+            content = m256.twitter_token_request(m256.twitter_access_token_url, 'POST', req.request_key, req.request_secret)
+        except urlfetch.DownloadError:
+            m256.output_error(self, 'DownloadError requesting %s' % m256.twitter_access_token_url)
+            return
 
-		access_token = dict(cgi.parse_qsl(content))
+        access_token = dict(cgi.parse_qsl(content))
 
-		if 'oauth_token' not in access_token:
-			m256.output_error(self, 'Twitter access token response was invalid')
-			return
+        if 'oauth_token' not in access_token:
+            m256.output_error(self, 'Twitter access token response was invalid')
+            return
 
-		if 'oauth_token' not in access_token:
-			m256.output_error(self, 'Twitter access token response was invalid')
-			return
+        if 'oauth_token' not in access_token:
+            m256.output_error(self, 'Twitter access token response was invalid')
+            return
 
-		try:
-			content = m256.twitter_token_request(m256.twitter_user_timeline_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
-		except urlfetch.DownloadError:
-			m256.output_error(self, 'DownloadError requesting %s' % m256.twitter_user_timeline_url)
-			return
+        try:
+            content = m256.twitter_token_request(m256.twitter_user_timeline_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
+        except urlfetch.DownloadError:
+            m256.output_error(self, 'DownloadError requesting %s' % m256.twitter_user_timeline_url)
+            return
 
-		userinfo = simplejson.loads(content)
+        userinfo = simplejson.loads(content)
 
-		if len(userinfo) == 0:
-			m256.output_error(self, 'Twitter user timeline response was invalid')
-			return
+        if len(userinfo) == 0:
+            m256.output_error(self, 'Twitter user timeline response was invalid')
+            return
 
-		if 'user' not in userinfo[0]:
-			m256.output_error(self, 'Twitter user timeline response was invalid')
-			return
+        if 'user' not in userinfo[0]:
+            m256.output_error(self, 'Twitter user timeline response was invalid')
+            return
 
-		if 'id' not in userinfo[0]['user']:
-			m256.output_error(self, 'Twitter user timeline response was invalid')
-			return
+        if 'id' not in userinfo[0]['user']:
+            m256.output_error(self, 'Twitter user timeline response was invalid')
+            return
 
-		if 'screen_name' not in userinfo[0]['user']:
-			m256.output_error(self, 'Twitter user timeline response was invalid')
-			return
+        if 'screen_name' not in userinfo[0]['user']:
+            m256.output_error(self, 'Twitter user timeline response was invalid')
+            return
 
-		q2 = TwitterAccount.all()
-		q2.filter('twitter_id =', str(userinfo[0]['user']['id']))
+        q2 = TwitterAccount.all()
+        q2.filter('twitter_id =', str(userinfo[0]['user']['id']))
 
-		if q2.count() > 0:
-			self.redirect('/profile')
-			return
+        if q2.count() > 0:
+            self.redirect('/profile')
+            return
 
-		new_account = TwitterAccount()
-		new_account.access_key = access_token['oauth_token']
-		new_account.access_secret = access_token['oauth_token_secret']
-		new_account.twitter_id = str(userinfo[0]['user']['id'])
-		new_account.screen_name = str(userinfo[0]['user']['screen_name'])
-		new_account.account = m256.get_user_model()
+        new_account = TwitterAccount()
+        new_account.access_key = access_token['oauth_token']
+        new_account.access_secret = access_token['oauth_token_secret']
+        new_account.twitter_id = str(userinfo[0]['user']['id'])
+        new_account.screen_name = str(userinfo[0]['user']['screen_name'])
+        new_account.account = m256.get_user_model()
 
-		try:
-			new_account.put()
-		except CapabilityDisabledError:
-			m256.output_maintenance(self)
-			return
+        try:
+            new_account.put()
+        except CapabilityDisabledError:
+            m256.output_maintenance(self)
+            return
 
-		taskqueue.add(url='/worker_twitter_history', params={'twitter_id': new_account.twitter_id}, method='GET')
+        taskqueue.add(url='/worker_twitter_history', params={'twitter_id': new_account.twitter_id}, method='GET')
 
-		url = '/t/'+new_account.screen_name
-		m256.output_template(self, 'templates/callback.tmpl', {'map_url': url})
-		m256.notify_admin("New Twitter account added: http://www.map256.com/t/%s" % new_account.screen_name)
+        url = '/t/'+new_account.screen_name
+        m256.output_template(self, 'templates/callback.tmpl', {'map_url': url})
+        m256.notify_admin("New Twitter account added: http://www.map256.com/t/%s" % new_account.screen_name)
 
 class TwitterAccountDeleteHandler(webapp.RequestHandler):
-	def get(self):
-		twitter_id = str(self.request.get('twitter_id'))
-		u_acc = m256.get_user_model()
+    def get(self):
+        twitter_id = str(self.request.get('twitter_id'))
+        u_acc = m256.get_user_model()
 
-		q1 = TwitterAccount.all()
-		q1.filter('twitter_id =', twitter_id)
-		q1.filter('account =', u_acc)
+        q1 = TwitterAccount.all()
+        q1.filter('twitter_id =', twitter_id)
+        q1.filter('account =', u_acc)
 
-		if q1.count() != 0:
-			#FIXME: Uh, filtering on a single property here.  50?
-			r1 = q1.fetch(50)
+        if q1.count() != 0:
+            #FIXME: Uh, filtering on a single property here.  50?
+            r1 = q1.fetch(50)
 
-			for twitter_account in r1:
-				q2 = TwitterCheckin.all(keys_only=True)
-				q2.filter('owner =', twitter_account)
-				db.delete(q2.fetch(1000)) #FIXME: Won't delete all
-				twitter_account.delete()
+            for twitter_account in r1:
+                q2 = TwitterCheckin.all(keys_only=True)
+                q2.filter('owner =', twitter_account)
+                db.delete(q2.fetch(1000)) #FIXME: Won't delete all
+                twitter_account.delete()
 
-			m256.output_template(self, 'templates/account_deleted.tmpl')
-		else:
-			self.redirect('/profile')
+            m256.output_template(self, 'templates/account_deleted.tmpl')
+        else:
+            self.redirect('/profile')
 
 def main():
-    application = webapp.WSGIApplication([('/', FrontHandler),
-										 ('/scoreboard', ScoreboardHandler),
-										 ('/profile', ProfileHandler),
-										 ('/foursquare_authorization', FoursquareAuthorizationHandler),
-										 ('/foursquare_callback', FoursquareCallbackHandler),
-										 ('/foursquare_account_delete', FoursquareAccountDeleteHandler),
-										 ('/foursquare_account_hide_toggle', FoursquareAccountHideToggle),
-										 ('/twitter_authorization', TwitterAuthorizationHandler),
-										 ('/twitter_callback', TwitterCallbackHandler),
-										 ('/twitter_account_delete', TwitterAccountDeleteHandler),
-										 ('/data/(.*)', DataHandler),
-										 ('/t/(.*)', LookupHandler),
-										 ('/f/(.*)', LookupHandler)],
-                                         debug=True)
+
+    routes = [
+        ('/', FrontHandler),
+        ('/scoreboard', ScoreboardHandler),
+        ('/profile', ProfileHandler),
+        ('/account_hide_toggle', AccountHideToggle),
+        ('/foursquare_authorization', FoursquareAuthorizationHandler),
+        ('/foursquare_callback', FoursquareCallbackHandler),
+        ('/foursquare_account_delete', FoursquareAccountDeleteHandler),
+        ('/twitter_authorization', TwitterAuthorizationHandler),
+        ('/twitter_callback', TwitterCallbackHandler),
+        ('/twitter_account_delete', TwitterAccountDeleteHandler),
+        ('/data/(.*)', DataHandler),
+        ('/t/(.*)', LookupHandler),
+        ('/f/(.*)', LookupHandler)
+    ]
+
+    application = webapp.WSGIApplication(routes, debug=True)
     util.run_wsgi_app(application)
 
 
