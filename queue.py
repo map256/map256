@@ -166,7 +166,6 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 					ci.put()
 
 		if len(history) > 1:
-			#FIXME: Does not result in acceptable behavior if there are no geo tweets AT ALL for the user
 			if self.request.get('since'):
 				logging.info('Have more than one tweet, enqueing since last_id: %s' % history[0]['id'])
 				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'since': history[0]['id']}, method='GET')
@@ -177,6 +176,10 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 				logging.info('Have more than one tweet, enqueing since last_id: %s and before last_id: %s' % (history[0]['id'], history[len(history)-1]['id']))
 				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'since': history[0]['id']}, method='GET')
 				taskqueue.add(url='/worker_twitter_history', params={'twitter_id': t_acct.twitter_id, 'before': history[len(history)-1]['id']}, method='GET')
+		else:
+			if self.request.get('since'):
+				t_acct.most_recent_tweet_id = self.request.get('since')
+				t_acct.put() #FIXME: Not very race condition proof, but does at least get this bug out of the way for now.
 
 class StatisticsWorker(webapp.RequestHandler):
 	def get(self, kind=None, period=None):

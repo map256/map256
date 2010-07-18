@@ -73,6 +73,7 @@ class TwitterAccount(db.Model):
 	disabled = db.BooleanProperty(default=False)
 	account = db.ReferenceProperty(Account)
 	hide_last_values = db.BooleanProperty(default=False)
+	most_recent_tweet_id = db.StringProperty()
 
 class TwitterCheckin(Checkin):
 	owner = db.ReferenceProperty(TwitterAccount)

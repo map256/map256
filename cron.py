@@ -66,6 +66,8 @@ class TwitterHistoryDispatcher(webapp.RequestHandler):
 			if q2.count() > 0:
 				latest = q2.get()
 				params['since'] = latest.tweet_id
+			elif user.most_recent_tweet_id is not None:
+				params['since'] = user.most_recent_tweet_id
 
 			logging.info('Enqueing task worker_twitter_history with params %s' % params)
 			taskqueue.add(url='/worker_twitter_history', params=params, method='GET')
