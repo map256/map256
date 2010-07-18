@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 #
 # Copyright (c) 2010 Eric Sigler, esigler@gmail.com
@@ -32,6 +33,7 @@ from google.appengine.api.labs import taskqueue
 
 from models import *
 
+
 class FoursquareHistoryDispatcher(webapp.RequestHandler):
     def get(self):
         q1 = FoursquareAccount.all()
@@ -49,8 +51,10 @@ class FoursquareHistoryDispatcher(webapp.RequestHandler):
                 latest = q2.get()
                 params['since'] = latest.checkin_id
 
-            logging.info('Enqueing task worker_foursquare_history with params %s' % params)
-            taskqueue.add(url='/worker_foursquare_history', params=params, method='GET')
+            logging.info('Adding worker_foursquare_history with: %s' % params)
+            taskqueue.add(url='/worker_foursquare_history',
+                          params=params,
+                          method='GET')
 
 class TwitterHistoryDispatcher(webapp.RequestHandler):
     def get(self):
@@ -71,8 +75,10 @@ class TwitterHistoryDispatcher(webapp.RequestHandler):
             elif user.most_recent_tweet_id is not None:
                 params['since'] = user.most_recent_tweet_id
 
-            logging.info('Enqueing task worker_twitter_history with params %s' % params)
-            taskqueue.add(url='/worker_twitter_history', params=params, method='GET')
+            logging.info('Adding worker_twitter_history with: %s' % params)
+            taskqueue.add(url='/worker_twitter_history',
+                          params=params,
+                          method='GET')
 
 class StatisticsDispatcher(webapp.RequestHandler):
     def get(self):
@@ -81,7 +87,9 @@ class StatisticsDispatcher(webapp.RequestHandler):
 
         for kind in kinds:
             for period in periods:
-                taskqueue.add(url='/worker_statistics', params={'period': period, 'kind': kind}, method='GET')
+                taskqueue.add(url='/worker_statistics',
+                              params={'period': period, 'kind': kind},
+                              method='GET')
 
 class OauthRequestCleanupDispatcher(webapp.RequestHandler):
     def get(self):
@@ -91,12 +99,15 @@ class OauthRequestCleanupDispatcher(webapp.RequestHandler):
         db.delete(q1.fetch(250))
 
 def main():
-    application = webapp.WSGIApplication([('/cron_foursquare_history', FoursquareHistoryDispatcher),
-                                          ('/cron_twitter_history', TwitterHistoryDispatcher),
-                                          ('/cron_oauth_request_cleanup', OauthRequestCleanupDispatcher),
-                                          ('/cron_statistics', StatisticsDispatcher)],
-                                          debug=True)
 
+    routes = [
+        ('/cron_foursquare_history', FoursquareHistoryDispatcher),
+        ('/cron_twitter_history', TwitterHistoryDispatcher),
+        ('/cron_oauth_request_cleanup', OauthRequestCleanupDispatcher),
+        ('/cron_statistics', StatisticsDispatcher)
+    ]
+
+    application = webapp.WSGIApplication(routes, debug=True)
     util.run_wsgi_app(application)
 
 if __name__ == '__main__':
