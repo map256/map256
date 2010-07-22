@@ -541,10 +541,15 @@ class TwitterAccountDeleteHandler(webapp.RequestHandler):
         else:
             self.redirect('/profile')
 
+class FaqHandler(webapp.RequestHandler):
+    def get(self):
+        m256.output_template(self, 'templates/faq.tmpl')
+
 def main():
 
     routes = [
         ('/', FrontHandler),
+        ('/faq', FaqHandler),
         ('/scoreboard', ScoreboardHandler),
         ('/profile', ProfileHandler),
         ('/account_hide_toggle', AccountHideToggle),

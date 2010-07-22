@@ -12,6 +12,9 @@ handlers:
 - url: /
   script: app.py
 
+- url: /faq
+  script: app.py
+
 - url: /t/(.*)
   script: app.py
 
@@ -102,17 +105,9 @@ handlers:
   static_files: static/stylesheet.css
   upload: static/stylesheet.css
 
-- url: /faq.html
-  static_files: static/faq.html
-  upload: static/faq.html
-
 - url: /map256.js
   static_files: static/map256.js
   upload: static/map256.js
-
-- url: /compass.png
-  static_files: static/compass.png
-  upload: static/compass.png
 
 - url: /static
   static_dir: static
