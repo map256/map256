@@ -74,7 +74,7 @@ class FrontHandler(webapp.RequestHandler):
             frontpage_userlist = simplejson.dumps(fsq_accounts)
             memcache.add('frontpage_userlist', frontpage_userlist, 300)
 
-        m256.output_template(self, 'templates/front.tmpl', {'frontpage_userlist': frontpage_userlist})
+        m256.output_template(self, 'templates/front.tmpl', {'frontpage_userlist': frontpage_userlist, 'page_title': 'Main'})
 
 #FIXME: To sanitize
 class LookupHandler(webapp.RequestHandler):
@@ -135,7 +135,7 @@ class ScoreboardHandler(webapp.RequestHandler):
     def get(self):
         periods = ('week', 'month', 'alltime')
         kinds = ('checkin_speed', 'distance_traveled', 'number_checkins')
-        template_values = {}
+        template_values = {'page_title': 'Scoreboard', 'page_header': 'Scoreboard'}
 
         for kind in kinds:
             for period in periods:
@@ -150,7 +150,7 @@ class ScoreboardHandler(webapp.RequestHandler):
 class ProfileHandler(webapp.RequestHandler):
     def get(self):
         account = m256.get_user_model()
-        template_values = {}
+        template_values = {'page_title': 'Profile', 'page_header': 'Profile'}
 
         q1 = FoursquareAccount.all()
         q1.filter('account =', account)
@@ -248,7 +248,7 @@ class FoursquareAuthorizationHandler(webapp.RequestHandler):
             return
 
         url = m256.foursquare_authorize_url+'?oauth_token='+req.request_key
-        m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Foursquare'})
+        m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Foursquare', 'page_title': 'Authorize Access', 'page_header': 'Authorize Access'})
 
 class FoursquareCallbackHandler(webapp.RequestHandler):
     def get(self):
@@ -317,7 +317,7 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
         taskqueue.add(url='/worker_foursquare_history', params={'fsq_id': new_account.foursquare_id}, method='GET')
 
         url = '/f/'+new_account.foursquare_id
-        m256.output_template(self, 'templates/callback.tmpl', {'map_url': url})
+        m256.output_template(self, 'templates/callback.tmpl', {'map_url': url, 'page_title': 'Authorization Completed', 'page_header': 'Authorization Completed'})
         m256.notify_admin("New Foursquare account added: http://www.map256.com/f/%s" % new_account.foursquare_id)
 
 class FoursquareAccountDeleteHandler(webapp.RequestHandler):
@@ -344,7 +344,7 @@ class FoursquareAccountDeleteHandler(webapp.RequestHandler):
                     m256.output_maintenance(self)
                     return
 
-            m256.output_template(self, 'templates/account_deleted.tmpl')
+            m256.output_template(self, 'templates/account_deleted.tmpl', {'page_title': 'Account Deleted', 'page_header': 'Account Deleted'})
         else:
             self.redirect('/profile')
 
@@ -438,7 +438,7 @@ class TwitterAuthorizationHandler(webapp.RequestHandler):
             return
 
         url = m256.twitter_authorize_url+'?oauth_token='+req.request_key
-        m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Twitter'})
+        m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Twitter', 'page_title': 'Authorize Account', 'page_header': 'Authorize Account'})
 
 class TwitterCallbackHandler(webapp.RequestHandler):
     def get(self):
@@ -515,7 +515,7 @@ class TwitterCallbackHandler(webapp.RequestHandler):
         taskqueue.add(url='/worker_twitter_history', params={'twitter_id': new_account.twitter_id}, method='GET')
 
         url = '/t/'+new_account.screen_name
-        m256.output_template(self, 'templates/callback.tmpl', {'map_url': url})
+        m256.output_template(self, 'templates/callback.tmpl', {'map_url': url, 'page_title': 'Authorization Completed', 'page_header': 'Authorization Completed'})
         m256.notify_admin("New Twitter account added: http://www.map256.com/t/%s" % new_account.screen_name)
 
 class TwitterAccountDeleteHandler(webapp.RequestHandler):
@@ -537,13 +537,13 @@ class TwitterAccountDeleteHandler(webapp.RequestHandler):
                 db.delete(q2.fetch(1000)) #FIXME: Won't delete all
                 twitter_account.delete()
 
-            m256.output_template(self, 'templates/account_deleted.tmpl')
+            m256.output_template(self, 'templates/account_deleted.tmpl', {'page_title': 'Account Deleted', 'page_header': 'Account Deleted'})
         else:
             self.redirect('/profile')
 
 class FaqHandler(webapp.RequestHandler):
     def get(self):
-        m256.output_template(self, 'templates/faq.tmpl')
+        m256.output_template(self, 'templates/faq.tmpl', {'page_title': 'FAQ', 'page_header': 'FAQ'})
 
 def main():
 

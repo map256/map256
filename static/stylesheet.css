@@ -17,6 +17,7 @@ html {
     background-image: url('/static/compass.png');
     background-repeat: no-repeat;
     background-position: right top;
+    height: 100%;
 }
 
 #reallystrong {
@@ -26,6 +27,10 @@ html {
 #signin_button {
     padding: 20px;
     text-align: center;
+}
+
+#map_canvas {
+    height: 100%
 }
 
 /* Palette from: http://www.colourlovers.com/palette/89057/Wanderlust */

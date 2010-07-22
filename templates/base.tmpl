@@ -2,13 +2,18 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>{% block title %}{% endblock %}</title>
+        <title>map256: {{ page_title }}</title>
         <link rel="stylesheet" href="/static/stylesheet.css" />
+        {% block extraheaditems %}{% endblock %}
     </head>
     <body>
-        <h1><a href="/">map256</a>: {% block topheader %}{% endblock %}</h1>
+{% if page_header %}
+        <h1><a href="/">map256</a>: {{ page_header }}</h1>
+{% endif %}
 {% block content %}{% endblock %}
+{% if page_header %}
         <p>Comments, questions, concerns?  Check out the <a href="/faq">FAQ</a></p>
+{% endif %}
         <script type="text/javascript">
 
           var _gaq = _gaq || [];

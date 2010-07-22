@@ -162,13 +162,13 @@ def notify_admin(body):
 def output_error(app, admin_description):
     app.error(500)
     path = os.path.join(os.path.dirname(__file__), 'templates/error.tmpl')
-    app.response.out.write(template.render(path, {}))
+    app.response.out.write(template.render(path, {'page_title': 'Error', 'page_header': 'Error'}))
     notify_admin('ERROR: '+admin_description)
 
 def output_maintenance(app):
     app.error(500)
     path = os.path.join(os.path.dirname(__file__), 'templates/maintenance.tmpl')
-    app.response.out.write(template.render(path, {}))
+    app.response.out.write(template.render(path, {'page_title': 'Google Maintenance', 'page_header': 'Google Maintenance'}))
 
 def downloaderror_check():
     recent = memcache.get('urlfetch_count')

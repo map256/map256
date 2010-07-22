@@ -1,8 +1,5 @@
 {% extends "base.tmpl" %}
 
-{% block title %}Authorize Access{% endblock %}
-{% block topheader %}Authorize access{% endblock %}
-
 {% block content %}
 		<p>OK, we're about to send you over to {{ service_name }} to authorize map256 to access your account history.  Here's the information we'll be storing about you:</p>
 {% ifequal service_name "Twitter" %}
