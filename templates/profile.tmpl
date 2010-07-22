@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-	  <meta charset="utf-8" />
-    <title>map256: Profile</title>
-    <link rel="stylesheet" href="stylesheet.css" />
-	</head>
-	<body>
-		<h1><a href="/">map256</a>: Profile</h1>
+{% extends "base.tmpl" %}
+
+{% block title %}Profile{% endblock %}
+{% block topheader %}Profile{% endblock %}
+
+{% block content %}
 		<p>{{ nickname }}</p>
 		<hr>
 		<h2>Foursquare Accounts:</h2>
@@ -44,6 +41,4 @@
 				<p><a href="/twitter_authorization">Add a Twitter account</a></p>
 				<hr>
 		<p><a href="{{ signout_url }}">Sign out</a></p>
-		<p>Comments, questions, concerns?  Check out the <a href="/faq.html">FAQ</a></p>
-	</body>
-</html>
+{% endblock %}

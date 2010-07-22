@@ -1,33 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-	  <meta charset="utf-8" />
-    <title>map256: Authorize Access</title>
-    <link rel="stylesheet" href="stylesheet.css" />
-	</head>
-	<body>
-		<h1><a href="/">map256</a>: Authorize access</h1>
+{% extends "base.tmpl" %}
+
+{% block title %}Authorize Access{% endblock %}
+{% block topheader %}Authorize access{% endblock %}
+
+{% block content %}
 		<p>OK, we're about to send you over to {{ service_name }} to authorize map256 to access your account history.  Here's the information we'll be storing about you:</p>
-		<ul>
-			<li>All of your checkin locations</li>
-			<li>All of your checkin times</li>
+{% ifequal service_name "Twitter" %}
+        <p>For any Tweet that has geo-info:</p>
+        <ul>
+            <li>The location (example: "Rolla, MO")</li>
+            <li>The time (example: "7:23PM July 21st, 2010")</li>
+            <li>The content (example: "Hello World!")</li>
 		</ul>
-		<p>A reminder: <strong>This information will be available to the public</strong></p>
-		<p>In addition to mapping out your travels, map256 may use this data in the future to provide additional statistics and information about your travels.</p>
-		<p>Ready?  <a href="{{ url }}">Go To {{ service_name }}</a>.</p>
-		<p>Comments, questions, concerns?  Check out the <a href="/faq.html">FAQ</a></p>
-		<script type="text/javascript">
-
-		  var _gaq = _gaq || [];
-		  _gaq.push(['_setAccount', 'UA-1636496-2']);
-		  _gaq.push(['_trackPageview']);
-
-		  (function() {
-		    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-		  })();
-
-		</script>
-	</body>
-</html>
+{% endifequal %}
+{% ifequal service_name "Foursquare" %}
+        <p>For all of your Checkins:</p>
+        <ul>
+            <li>The location (example: "Joe's Coffee Shop")</li>
+            <li>The time (example: "7:23PM July 21st, 2010")</li>
+            <li>If you "shouted", the content of the shout (example: "Hello World!")</li>
+		</ul>
+{% endifequal %}
+		<p>A reminder: <strong id="reallystrong">This information will be available to the public</strong></p>
+		<p>map256 will always provide you with the ability to hide or remove this information if you change your mind later.</p>
+		<p>Ready?  Click the "Sign In" button below to get started!</p>
+{% ifequal service_name "Twitter" %}
+		<p id="signin_button"><a href="{{ url }}"><img src="/static/twitter_signin.png" alt="Sign in to {{ service_name }}" /></a></p>
+{% endifequal %}
+{% ifequal service_name "Foursquare" %}
+		<p id="signin_button"><a href="{{ url }}"><img src="/static/foursquare_signin.png" alt="Sign in to {{ service_name }}" /></a></p>
+{% endifequal %}
+{% endblock %}

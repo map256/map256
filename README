@@ -14,3 +14,13 @@ Recipe to recreate:
 3) Deploy this code to that GAE application
 ...
 47) There is no step 47.
+
+---
+
+Note: To get started, create a file, "m256_cfg.py" in the top level directory, and place the correct OAuth keys in each var:
+---
+twitter_consumer_key = 'xxx'
+twitter_consumer_secret = 'xxx'
+foursquare_consumer_key = 'xxx'
+foursquare_consumer_secret = 'xxx'
+---

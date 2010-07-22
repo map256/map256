@@ -1,3 +1,31 @@
 body {
-	font-family: Verdana, Arial, sans-serif;
+	width: 600px;
+	margin: auto;
+	text-align: left;
+	background-color: white;
+	padding: 15px;
 }
+
+a {
+    color: #4C9B45;
+}
+
+html {
+    text-align: center;
+    background-color: #346630;
+    font-family: "Lucida Grande", Verdana, Arial, sans-serif;
+    background-image: url('/static/compass.png');
+    background-repeat: no-repeat;
+    background-position: right top;
+}
+
+#reallystrong {
+    color: red;
+}
+
+#signin_button {
+    padding: 20px;
+    text-align: center;
+}
+
+/* Palette from: http://www.colourlovers.com/palette/89057/Wanderlust */

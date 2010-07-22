@@ -1,28 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-	  <meta charset="utf-8" />
-    <title>map256: Authorization Completed</title>
-    <link rel="stylesheet" href="stylesheet.css" />
-	</head>
-	<body>
-		<h1><a href="/">map256</a>: Authorization Completed</h1>
+{% extends "base.tmpl" %}
+
+{% block title %}Authorization Completed{% endblock %}
+{% block topheader %}Authorization Completed{% endblock %}
+
+{% block content %}
 		<p>Fantastic!  You've authorized map256 to get access to your account history.</p>
 		<p>We're going out and learning all about where you've been.  It may take us just a moment to get everything ready for you! (Find out more at your <a href="/profile">profile</a>)</p>
 		<p>To see what we've found so far, take a look at <a href="{{ map_url }}">your map</a>.</p>
-		<p>Comments, questions, concerns?  Check out the <a href="/faq.html">FAQ</a></p>
-	</body>
-	<script type="text/javascript">
-
-	  var _gaq = _gaq || [];
-	  _gaq.push(['_setAccount', 'UA-1636496-2']);
-	  _gaq.push(['_trackPageview']);
-
-	  (function() {
-	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-	  })();
-
-	</script>
-</html>
+{% endblock %}

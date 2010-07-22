@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-	  <meta charset="utf-8" />
-    <title>map256: Error</title>
-    <link rel="stylesheet" href="stylesheet.css" />
-	</head>
-	<body>
-		<h1><a href="/">map256</a>: Maintenance</h1>
+{% extends "base.tmpl" %}
+
+{% block title %}Google Maintenance{% endblock %}
+{% block topheader %}Google Maintenance{% endblock %}
+
+{% block content %}
 		<p>We've just picked up a fault in the AE35 unit. Google is currently performing maintenance on their Google App Engine platform, so we're unable to save some of the data needed to do this.  Please try again in a few minutes.</p>
 		<p>Don't want to sit down calmly, take a stress pill, and think things over?  You can always tell us what you think at: <a href="mailto:service@map256.com">service@map256.com</a>.</p>
-	</body>
-</html>
+{% endblock %}

@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-	  <meta charset="utf-8" />
-    <title>map256: Scoreboard</title>
-    <link rel="stylesheet" href="stylesheet.css" />
-	</head>
-	<body>
-		<h1><a href="/">map256</a>: Scoreboard</h1>
+{% extends "base.tmpl" %}
+
+{% block title %}Scoreboard{% endblock %}
+{% block topheader %}Scoreboard{% endblock %}
+
+{% block content %}
 		<h2>Users by distance traveled, this week</h2>
 {% for item in distance_traveled_week %}
 			<p><a href="/f/{{ item.0 }}">{{ item.0 }}</a> ({{ item.1|floatformat:2 }} kilometers) </p>
@@ -43,19 +40,4 @@
 {% for item in checkin_speed_alltime %}
 			<p><a href="/f/{{ item.0 }}">{{ item.0 }}</a> ({{ item.1|floatformat:5 }} kilometers/second) </p>
 {% endfor %}
-		<p>Comments, questions, concerns?  Check out the <a href="/faq.html">FAQ</a></p>
-		<script type="text/javascript">
-
-		  var _gaq = _gaq || [];
-		  _gaq.push(['_setAccount', 'UA-1636496-2']);
-		  _gaq.push(['_trackPageview']);
-
-		  (function() {
-		    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-		  })();
-
-		</script>
-	</body>
-</html>
+{% endblock %}

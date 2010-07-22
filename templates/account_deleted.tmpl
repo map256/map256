@@ -1,15 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-	  <meta charset="utf-8" />
-    <title>map256: Profile</title>
-    <link rel="stylesheet" href="stylesheet.css" />
-	</head>
-	<body>
-		<h1><a href="/">map256</a>: Account Deleted</h1>
-		<p>Account deleted.</p>
-		<p><a href="/profile">Back to your Profile</a></p>
-		<p><a href="{{ signout_url }}">Sign out</a></p>
-		<p>Comments, questions, concerns?  Check out the <a href="/faq.html">FAQ</a></p>
-	</body>
-</html>
+{% extends "base.tmpl" %}
+
+{% block title %}Account Deleted{% endblock %}
+{% block topheader %}Account Deleted{% endblock %}
+
+{% block content %}
+<p>Account deleted.</p>
+<p><a href="/profile">Back to your Profile</a></p>
+<p><a href="{{ signout_url }}">Sign out</a></p>
+{% endblock %}
