@@ -1,26 +1,27 @@
 Map256 Google App Engine code
 ---
+Map256 is a basic web application to plot travel path and visualize history of Foursquare/Twitter/Flickr/etc geodata.  All items needed (except for OAuth consumer keys / secrets) are contained in this repository.  The LICENSE file indicates what this is distributed under (basically MIT-style "you're on your own").
 
-Map256 is a basic web application to plot travel path and visualize history of Foursquare (and possibly other) geodata.
-
-All items needed (except for OAuth consumer keys / secrets) are contained in this repository.
-
-The LICENSE file indicates what this is distributed under (basically MIT-style "you're on your own").
-
+Disclaimer for anyone questioning my sanity and fitness to live after reading through this code:  I have never written anything in Python, Javascript, or using Google App Engine before, so if something doesn't follow normal conventions (*cough*spaces vs tabs*cough*) or seems completely misguided, it's more likely due to ignorance or expedience than an unwillingness to do the Right Thing (tm).  Hate mail and coding suggestions can be directed to service@map256.com
+---
 Recipe to recreate:
 
 1) Checkout a copy of this repo
-2) Create a Google App Engine account & target application
-3) Deploy this code to that GAE application
-...
-47) There is no step 47.
-
+2) Create a Google App Engine account & target application (http://appengine.google.com)
+3) Gather all of the appropriate application keys (indicated below)
+4) Deploy this code to GAE
 ---
+To get all the keys you need, create a file, "m256_cfg.py" in the top level directory, and place the correct keys in each var:
 
-Note: To get started, create a file, "m256_cfg.py" in the top level directory, and place the correct OAuth keys in each var:
----
+# http://dev.twitter.com
 twitter_consumer_key = 'xxx'
 twitter_consumer_secret = 'xxx'
+
+# http://foursquare.com/oauth
 foursquare_consumer_key = 'xxx'
 foursquare_consumer_secret = 'xxx'
+
+# http://www.flickr.com/services/api/
+flickr_api_key = 'xxx'
+flickr_api_secret = 'xxx'
 ---
