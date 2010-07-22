@@ -61,33 +61,13 @@ handlers:
 
 ############### QUEUE WORKERS #################
 
-- url: /worker_foursquare_history
-  script: queue.py
-  login: admin
-
-- url: /worker_twitter_history
-  script: queue.py
-  login: admin
-
-- url: /worker_statistics
+- url: /worker_(.*)
   script: queue.py
   login: admin
 
 ############### CRON JOBS #################
 
-- url: /cron_foursquare_history
-  script: cron.py
-  login: admin
-
-- url: /cron_twitter_history
-  script: cron.py
-  login: admin
-
-- url: /cron_oauth_request_cleanup
-  script: cron.py
-  login: admin
-
-- url: /cron_statistics
+- url: /cron_(.*)
   script: cron.py
   login: admin
 
@@ -100,10 +80,6 @@ handlers:
 - url: /favicon.ico
   static_files: static/favicon.ico
   upload: static/favicon.ico
-
-- url: /stylesheet.css
-  static_files: static/stylesheet.css
-  upload: static/stylesheet.css
 
 - url: /map256.js
   static_files: static/map256.js
