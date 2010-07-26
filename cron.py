@@ -80,6 +80,28 @@ class TwitterHistoryDispatcher(webapp.RequestHandler):
                           params=params,
                           method='GET')
 
+class FlickrHistoryDispatcher(webapp.RequestHandler):
+    def get(self):
+        q1 = FlickrAccount.all()
+        q1.filter('disabled =', False)
+
+        for user in q1:
+            params = {}
+            params['flickr_id'] = user.nsid
+
+            q2 = FlickrCheckin.all()
+            q2.filter('owner =', user)
+            q2.order('-occurred')
+
+            if q2.count() > 0:
+                latest = q2.get()
+                params['since'] = latest.occured
+                #FIXME: Need an elif here to do no geodata import catchall
+
+            logging.info('Adding worker_flickr_history with %s' % params)
+            taskqueue.add(url='/worker_flickr_history',
+                          params=params)
+
 class StatisticsDispatcher(webapp.RequestHandler):
     def get(self):
         periods = ('week', 'month', 'alltime')
@@ -103,6 +125,7 @@ def main():
     routes = [
         ('/cron_foursquare_history', FoursquareHistoryDispatcher),
         ('/cron_twitter_history', TwitterHistoryDispatcher),
+        ('/cron_flickr_history', FlickrHistoryDispatcher),
         ('/cron_oauth_request_cleanup', OauthRequestCleanupDispatcher),
         ('/cron_statistics', StatisticsDispatcher)
     ]

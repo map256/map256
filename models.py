@@ -79,3 +79,19 @@ class TwitterAccount(db.Model):
 class TwitterCheckin(Checkin):
     owner = db.ReferenceProperty(TwitterAccount)
     tweet_id = db.StringProperty()
+
+class ServiceAccount(polymodel.PolyModel):
+    account = db.ReferenceProperty(Account)
+    created = db.DateTimeProperty(auto_now_add=True)
+    disabled = db.BooleanProperty(default=False)
+    hide_last_values = db.BooleanProperty(default=False)
+
+class FlickrAccount(ServiceAccount):
+    auth_token = db.StringProperty()
+    username = db.StringProperty()
+    nsid = db.StringProperty()
+
+class FlickrCheckin(Checkin):
+    owner = db.ReferenceProperty(FlickrAccount)
+    photo_id = db.StringProperty()
+    photo_url = db.LinkProperty()

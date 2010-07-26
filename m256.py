@@ -25,6 +25,7 @@
 
 import os
 import sys
+import logging
 
 httplib2_path = 'lib/httplib2.zip'
 sys.path.insert(0, httplib2_path)
@@ -52,6 +53,9 @@ twitter_request_token_url = 'https://api.twitter.com/oauth/request_token'
 twitter_access_token_url = 'https://api.twitter.com/oauth/access_token'
 twitter_authorize_url = 'https://api.twitter.com/oauth/authorize'
 twitter_user_timeline_url = 'http://api.twitter.com/1/statuses/user_timeline.json'
+
+flickr_login_url = 'http://www.flickr.com/services/auth/'
+flickr_base_api_url = 'https://secure.flickr.com/services/rest/'
 
 def oauth_consumer_request(url, method, consumer_key, consumer_secret):
     consumer = oauth.Consumer(consumer_key, consumer_secret)
@@ -164,6 +168,7 @@ def output_error(app, admin_description):
     path = os.path.join(os.path.dirname(__file__), 'templates/error.tmpl')
     app.response.out.write(template.render(path, {'page_title': 'Error', 'page_header': 'Error'}))
     notify_admin('ERROR: '+admin_description)
+    logging.error(admin_description)
 
 def output_maintenance(app):
     app.error(500)

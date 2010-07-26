@@ -59,6 +59,14 @@ handlers:
   script: app.py
   login: required
 
+- url: /flickr_authorization
+  script: app.py
+  login: required
+
+- url: /flickr_callback
+  script: app.py
+  login: required
+
 ############### QUEUE WORKERS #################
 
 - url: /worker_(.*)

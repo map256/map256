@@ -3,9 +3,9 @@
 {% block content %}
 		<p>OK, we're about to send you over to {{ service_name }} to authorize map256 to access your account history.  Here's the information we'll be storing about you:</p>
 {% ifequal service_name "Twitter" %}
-        <p>For any Tweet that has geo-info:</p>
+        <p>For any Tweet that has location information:</p>
         <ul>
-            <li>The location (example: "Rolla, MO")</li>
+            <li>The location (example: <a href="http://maps.google.com/?ie=UTF8&amp;hq=&amp;hnear=Rolla,+Phelps,+Missouri&amp;ll=37.9566,-91.77338&amp;spn=0.00637,0.013272&amp;z=17">37.9566, -91.77338</a>)</li>
             <li>The time (example: "7:23PM July 21st, 2010")</li>
             <li>The content (example: "Hello World!")</li>
 		</ul>
@@ -13,18 +13,29 @@
 {% ifequal service_name "Foursquare" %}
         <p>For all of your Checkins:</p>
         <ul>
-            <li>The location (example: "Joe's Coffee Shop")</li>
+            <li>The location (example: <a href="http://maps.google.com/?ie=UTF8&amp;hq=&amp;hnear=Rolla,+Phelps,+Missouri&amp;ll=37.9566,-91.77338&amp;spn=0.00637,0.013272&amp;z=17">37.9566, -91.77338</a>)</li>
             <li>The time (example: "7:23PM July 21st, 2010")</li>
             <li>If you "shouted", the content of the shout (example: "Hello World!")</li>
+		</ul>
+{% endifequal %}
+{% ifequal service_name "Flickr" %}
+        <p>For any public photo that has location information:</p>
+        <ul>
+            <li>The location (example: <a href="http://maps.google.com/?ie=UTF8&amp;hq=&amp;hnear=Rolla,+Phelps,+Missouri&amp;ll=37.9566,-91.77338&amp;spn=0.00637,0.013272&amp;z=17">37.9566, -91.77338</a>)</li>
+            <li>The time (example: "7:23PM July 21st, 2010")</li>
+            <li>The URL of the photo on Flickr</li>
 		</ul>
 {% endifequal %}
 		<p>A reminder: <strong id="reallystrong">This information will be available to the public</strong></p>
 		<p>map256 will always provide you with the ability to hide or remove this information if you change your mind later.</p>
 		<p>Ready?  Click the "Sign In" button below to get started!</p>
 {% ifequal service_name "Twitter" %}
-		<p id="signin_button"><a href="{{ url }}"><img src="/static/twitter_signin.png" alt="Sign in to {{ service_name }}" /></a></p>
+		<p id="signin_button"><a href="{{ url }}"><img src="/static/twitter_signin.png" alt="Sign in to {{ service_name }}" width="151" height="24"/></a></p>
 {% endifequal %}
 {% ifequal service_name "Foursquare" %}
-		<p id="signin_button"><a href="{{ url }}"><img src="/static/foursquare_signin.png" alt="Sign in to {{ service_name }}" /></a></p>
+		<p id="signin_button"><a href="{{ url }}"><img src="/static/foursquare_signin.png" alt="Sign in to {{ service_name }}" width="180" height="24"/></a></p>
+{% endifequal %}
+{% ifequal service_name "Flickr" %}
+        <p id="signin_button"><a href="{{ url }}">Go To <img src="/static/flickr.png" alt="Sign in to {{ service_name }}" width="112" height="30"></a></p>
 {% endifequal %}
 {% endblock %}

@@ -29,6 +29,7 @@ import sys
 import datetime
 import logging
 import urllib
+import md5
 
 from google.appengine.api import urlfetch
 from google.appengine.api.urlfetch import DownloadError
@@ -122,6 +123,115 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
             taskqueue.add(url='/worker_foursquare_history',
                           params={'fsq_id': fsq_account.foursquare_id, 'since': last_id },
                           method='GET')
+
+class FlickrHistoryWorker(webapp.RequestHandler):
+    def post(self):
+        logging.info('Handling Flickr history request')
+        flickr_id = str(self.request.get('flickr_id'))
+
+        q1 = FlickrAccount.all()
+        q1.filter('nsid = ', flickr_id)
+
+        if q1.count() != 1:
+            raise Exception('User does not exist')
+
+        flickr_account = q1.get()
+
+        m = md5.new()
+
+        if self.request.get('since'):
+            date = self.request.get('since')
+            datedecoded = urllib.unquote(date)
+            m.update(flickr_api_secret+'api_key'+flickr_api_key+'auth_token'+flickr_account.auth_token+'extrasdescription,date_taken,url_sq,geoformatjson'+'methodflickr.photos.getWithGeoData'+'min_taken_date'+datedecoded+'privacy_filter1sortdate-taken-asc')
+            url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc&min_taken_date='+date
+        else:
+            m.update(flickr_api_secret+'api_key'+flickr_api_key+'auth_token'+flickr_account.auth_token+'extrasdescription,date_taken,url_sq,geoformatjson'+'methodflickr.photos.getWithGeoData'+'privacy_filter1sortdate-taken-asc')
+            url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc'
+
+        try:
+            result = urlfetch.fetch(url)
+        except urlfetch.DownloadError:
+            logging.error('Download error on %s' % url)
+            m256.downloaderror_check()
+            return
+
+        if result.status_code != 200:
+            logging.error('Status code on %s was %s' % (url, result.status_code))
+            m256.downloaderror_check()
+            return
+
+        #FIXME: Horrible no good very bad way to get rid of JSON header.  Should regex, but Python regexes are ug-ly.
+        content = result.content
+        str1 = content.replace('jsonFlickrApi(', '')
+        str2 = str1.rstrip(')')
+
+        userdata = simplejson.loads(str2)
+
+        if 'photos' not in userdata:
+            errmsg = 'Photos not in userdata (url: %s, content: %s)' % (url, content)
+            logging.error(errmsg)
+            m256.notify_admin(errmsg)
+            return
+
+        if 'photo' not in userdata['photos']:
+            errmsg = 'Photo not in userdata (url: %s, content: %s)' % (url, content)
+            logging.error(errmsg)
+            m256.notify_admin(errmsg)
+            return
+
+        if len(userdata['photos']['photo']) > 0:
+            for photo in userdata['photos']['photo']:
+                logging.info('Have a photo (ID %s, Date %s)' % (photo['id'], photo['datetaken']))
+
+                q2 = FlickrCheckin.all()
+                q2.filter('photo_id = ', str(photo['id']))
+
+                if q2.count() != 0:
+                    logging.info('Found photo that already existed (%s)' % photo_id)
+                    continue
+
+                if 'latitude' not in photo:
+                    errmsg = 'Latitude not in photo (url: %s, content: %s)' % (url, content)
+                    logging.error(errmsg)
+                    m256.notify_admin(errmsg)
+                    continue
+
+                if 'longitude' not in photo:
+                    errmsg = 'Longitude not in photo (url: %s, content: %s)' % (url, content)
+                    logging.error(errmsg)
+                    m256.notify_admin(errmsg)
+                    continue
+
+                if 'datetaken' not in photo:
+                    errmsg = 'Datetaken not in photo (url: %s, content: %s)' % (url, content)
+                    logging.error(errmsg)
+                    m256.notify_admin(errmsg)
+                    continue
+
+                if 'datetaken' not in photo:
+                    errmsg = 'Longitude not in photo (url: %s, content: %s)' % (url, content)
+                    logging.error(errmsg)
+                    m256.notify_admin(errmsg)
+                    continue
+
+                if 'url_sq' not in photo:
+                    errmsg = 'Longitude not in photo (url: %s, content: %s)' % (url, content)
+                    logging.error(errmsg)
+                    m256.notify_admin(errmsg)
+                    continue
+
+                ci = FlickrCheckin()
+                ci.owner = flickr_account
+                ci.occurred = datetime.datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S')
+                ci.location = str(photo['latitude'])+','+str(photo['longitude'])
+                ci.photo_url = photo['url_sq']
+                ci.photo_id = str(photo['id'])
+                #ci.put()
+
+        if len(userdata['photos']['photo']) > 1:
+            lngth = len(userdata['photos']['photo']) - 1
+            date = urllib.quote(userdata['photos']['photo'][lngth]['datetaken'])
+            taskqueue.add(url='/worker_flickr_history', params={'flickr_id': flickr_id, 'since': date})
 
 class TwitterHistoryWorker(webapp.RequestHandler):
     def get(self):
@@ -294,6 +404,7 @@ def main():
 
     routes = [
         ('/worker_foursquare_history', FoursquareHistoryWorker),
+        ('/worker_flickr_history', FlickrHistoryWorker),
         ('/worker_twitter_history', TwitterHistoryWorker),
         ('/worker_statistics', StatisticsWorker)
     ]

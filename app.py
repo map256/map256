@@ -31,6 +31,7 @@ import os
 import sys
 import datetime
 import logging
+import md5
 
 from google.appengine.ext.webapp import template
 from google.appengine.api import memcache
@@ -159,6 +160,10 @@ class ProfileHandler(webapp.RequestHandler):
         q2 = TwitterAccount.all()
         q2.filter('account =', account)
         template_values['twitter_accounts'] = q2.fetch(25)
+
+        q3 = FlickrAccount.all()
+        q3.filter('account =', account)
+        template_values['flickr_accounts'] = q3.fetch(25)
 
         template_values['nickname'] = account.google_user.nickname()
 
@@ -406,6 +411,33 @@ class AccountHideToggle(webapp.RequestHandler):
             else:
                 self.redirect('/profile')
 
+        elif acc_type == 'flickr':
+            flickr_id = str(self.request.get('flickr_id'))
+            u_acc = m256.get_user_model()
+
+            q1 = FlickrAccount.all()
+            q1.filter('nsid =', flickr_id)
+            q1.filter('account =', u_acc)
+
+            if q1.count() != 0:
+                flickr_account = q1.get()
+
+                if flickr_account.hide_last_values:
+                    flickr_account.hide_last_values = False
+                else:
+                    #FIXME: Should try to invalidate all memcache entries associated with this
+                    flickr_account.hide_last_values = True
+
+                try:
+                    flickr_account.put()
+                except CapabilityDisabledError:
+                    m256.output_maintenance(self)
+                    return
+
+                self.redirect('/profile')
+            else:
+                self.redirect('/profile')
+
         else:
             self.redirect('/profile')
 
@@ -545,6 +577,86 @@ class FaqHandler(webapp.RequestHandler):
     def get(self):
         m256.output_template(self, 'templates/faq.tmpl', {'page_title': 'FAQ', 'page_header': 'FAQ'})
 
+class FlickrAuthorizationHandler(webapp.RequestHandler):
+    def get(self):
+        url = m256.flickr_login_url+'?api_key='+flickr_api_key+'&perms=read&api_sig='+flickr_api_sig
+        m256.output_template(self, 'templates/authorize.tmpl', {'url': url, 'service_name': 'Flickr', 'page_title': 'Authorize Account', 'page_header': 'Authorize Account'})
+
+class FlickrCallbackHandler(webapp.RequestHandler):
+    def get(self):
+        frob = self.request.get('frob')
+
+        if frob is None:
+            self.redirect('/flickr_authorization')
+
+        m = md5.new()
+        m.update(flickr_api_secret+'api_key'+flickr_api_key+'formatjsonfrob'+frob+'methodflickr.auth.getToken')
+        url = m256.flickr_base_api_url+'?method=flickr.auth.getToken&api_key='+flickr_api_key+'&format=json&frob='+frob+'&api_sig='+m.hexdigest()
+
+        try:
+            result = urlfetch.fetch(url)
+        except urlfetch.DownloadError:
+            m256.output_error(self, 'DownloadError requesting %s' % url)
+            return
+
+        if result.status_code != 200:
+            m256.output_error(self, 'Flickr user token request returned error (url: %s, content: %s)' % (url, content))
+            return
+
+        #FIXME: Horrible no good very bad way to get rid of JSON header.  Should regex, but Python regexes are ug-ly.
+        content = result.content
+        str1 = content.replace('jsonFlickrApi(', '')
+        str2 = str1.rstrip(')')
+        usertoken = simplejson.loads(str2)
+
+        if 'auth' not in usertoken:
+            m256.output_error(self, 'No auth in Flickr user token response (url: %s, content: %s)' % (url, content))
+            return
+
+        if 'token' not in usertoken['auth']:
+            m256.output_error(self, 'No token in Flickr user token response (url: %s, content: %s)' % (url, content))
+            return
+
+        if '_content' not in usertoken['auth']['token']:
+            m256.output_error(self, 'No _content in Flickr user token response (url: %s, content: %s)' % (url, content))
+            return
+
+        if 'user' not in usertoken['auth']:
+            m256.output_error(self, 'No user in Flickr user token response (url: %s, content: %s)' % (url, content))
+            return
+
+        if 'nsid' not in usertoken['auth']['user']:
+            m256.output_error(self, 'No nsid in Flickr user token response (url: %s, content: %s)' % (url, content))
+            return
+
+        q1 = FlickrAccount.all()
+        q1.filter('nsid =', usertoken['auth']['user']['nsid'])
+
+        if q1.count() > 0:
+            self.redirect('/profile')
+            return
+
+        new_account = FlickrAccount()
+        new_account.auth_token = usertoken['auth']['token']['_content']
+
+        if 'username' in usertoken['auth']['user']:
+            new_account.username = usertoken['auth']['user']['username']
+
+        new_account.nsid = usertoken['auth']['user']['nsid']
+        new_account.account = m256.get_user_model()
+
+        try:
+            new_account.put()
+        except CapabilityDisabledError:
+            m256.output_maintenance(self)
+            return
+
+        taskqueue.add(url='/worker_flickr_history', params={'flickr_id': new_account.nsid})
+
+        url = '/fl/'+new_account.nsid
+        m256.output_template(self, 'templates/callback.tmpl', {'map_url': url, 'page_title': 'Authorization Completed', 'page_header': 'Authorization Completed'})
+        m256.notify_admin("New Flickr account added: http://www.map256.com%s" % url)
+
 def main():
 
     routes = [
@@ -559,6 +671,8 @@ def main():
         ('/twitter_authorization', TwitterAuthorizationHandler),
         ('/twitter_callback', TwitterCallbackHandler),
         ('/twitter_account_delete', TwitterAccountDeleteHandler),
+        ('/flickr_authorization', FlickrAuthorizationHandler),
+        ('/flickr_callback', FlickrCallbackHandler),
         ('/data/(.*)', DataHandler),
         ('/t/(.*)', LookupHandler),
         ('/f/(.*)', LookupHandler)

@@ -24,4 +24,9 @@ foursquare_consumer_secret = 'xxx'
 # http://www.flickr.com/services/api/
 flickr_api_key = 'xxx'
 flickr_api_secret = 'xxx'
+flickr_api_sig = 'xxx'
+
+# http://gowalla.com/api/keys
+gowalla_api_key = 'xxx'
+gowalla_api_secret = 'xxx'
 ---

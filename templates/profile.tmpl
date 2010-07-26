@@ -25,17 +25,32 @@
 		<ul>
 {% for twitter_account in twitter_accounts %}
 			<li>
-				<a href="/t/{{ twitter_account.screen_name}}">{{ twitter_account.screen_name}}</a>
-			{% if twitter_account.hide_last_values %}
+				<a href="/t/{{ twitter_account.screen_name }}">{{ twitter_account.screen_name }}</a>
+{% if twitter_account.hide_last_values %}
 						(<a href="/account_hide_toggle?acc_type=twitter&amp;twit_id={{ twitter_account.twitter_id }}">show last 24hrs</a>)
-			{% else %}
+{% else %}
 						(<a href="/account_hide_toggle?acc_type=twitter&amp;twit_id={{ twitter_account.twitter_id }}">hide last 24hrs</a>)
-			{% endif %}
+{% endif %}
 			    (<a href="/twitter_account_delete?twitter_id={{ twitter_account.twitter_id }}">delete</a>)
 			</li>
 {% endfor %}
-				</ul>
-				<p><a href="/twitter_authorization">Add a Twitter account</a></p>
-				<hr>
+		</ul>
+		<p><a href="/twitter_authorization">Add a Twitter account</a></p>
+		<hr>
+		<h2>Flickr Accounts:</h2>
+		<ul>
+{% for flickr_account in flickr_accounts %}
+			<li>
+				<a href="/fl/{{ flickr_account.nsid }}">{{ flickr_account.nsid }}</a>
+{% if twitter_account.hide_last_values %}
+						(<a href="/account_hide_toggle?acc_type=flickr&amp;flickr_id={{ flickr_account.nsid }}">show last 24hrs</a>)
+{% else %}
+						(<a href="/account_hide_toggle?acc_type=flickr&amp;flickr_id={{ flickr_account.nsid }}">hide last 24hrs</a>)
+{% endif %}
+			</li>
+{% endfor %}
+		</ul>
+		<p><a href="/flickr_authorization">Add a Flickr account</a></p>
+		<hr>
 		<p><a href="{{ signout_url }}">Sign out</a></p>
 {% endblock %}
