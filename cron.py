@@ -95,7 +95,7 @@ class FlickrHistoryDispatcher(webapp.RequestHandler):
 
             if q2.count() > 0:
                 latest = q2.get()
-                params['since'] = latest.occured
+                params['since'] = latest.occurred
                 #FIXME: Need an elif here to do no geodata import catchall
 
             logging.info('Adding worker_flickr_history with %s' % params)

@@ -141,9 +141,9 @@ class FlickrHistoryWorker(webapp.RequestHandler):
 
         if self.request.get('since'):
             date = self.request.get('since')
-            datedecoded = urllib.unquote(date)
-            m.update(flickr_api_secret+'api_key'+flickr_api_key+'auth_token'+flickr_account.auth_token+'extrasdescription,date_taken,url_sq,geoformatjson'+'methodflickr.photos.getWithGeoData'+'min_taken_date'+datedecoded+'privacy_filter1sortdate-taken-asc')
-            url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc&min_taken_date='+date
+            dateencoded = urllib.quote(date)
+            m.update(flickr_api_secret+'api_key'+flickr_api_key+'auth_token'+flickr_account.auth_token+'extrasdescription,date_taken,url_sq,geoformatjson'+'methodflickr.photos.getWithGeoData'+'min_taken_date'+date+'privacy_filter1sortdate-taken-asc')
+            url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc&min_taken_date='+dateencoded
         else:
             m.update(flickr_api_secret+'api_key'+flickr_api_key+'auth_token'+flickr_account.auth_token+'extrasdescription,date_taken,url_sq,geoformatjson'+'methodflickr.photos.getWithGeoData'+'privacy_filter1sortdate-taken-asc')
             url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc'
