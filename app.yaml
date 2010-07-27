@@ -21,6 +21,9 @@ handlers:
 - url: /f/(.*)
   script: app.py
 
+- url: /fl/(.*)
+  script: app.py
+
 - url: /data/(.*)
   script: app.py
 
@@ -64,6 +67,10 @@ handlers:
   login: required
 
 - url: /flickr_callback
+  script: app.py
+  login: required
+
+- url: /flickr_account_delete
   script: app.py
   login: required
 

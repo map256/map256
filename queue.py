@@ -181,13 +181,11 @@ class FlickrHistoryWorker(webapp.RequestHandler):
 
         if len(userdata['photos']['photo']) > 0:
             for photo in userdata['photos']['photo']:
-                logging.info('Have a photo (ID %s, Date %s)' % (photo['id'], photo['datetaken']))
-
                 q2 = FlickrCheckin.all()
                 q2.filter('photo_id = ', str(photo['id']))
 
                 if q2.count() != 0:
-                    logging.info('Found photo that already existed (%s)' % photo_id)
+                    logging.info('Found photo that already existed (%s)' % photo['id'])
                     continue
 
                 if 'latitude' not in photo:
@@ -226,7 +224,9 @@ class FlickrHistoryWorker(webapp.RequestHandler):
                 ci.location = str(photo['latitude'])+','+str(photo['longitude'])
                 ci.photo_url = photo['url_sq']
                 ci.photo_id = str(photo['id'])
-                #ci.put()
+                ci.description = photo['url_sq']
+                ci.account_owner = flickr_account.account
+                ci.put()
 
         if len(userdata['photos']['photo']) > 1:
             lngth = len(userdata['photos']['photo']) - 1

@@ -42,11 +42,12 @@
 {% for flickr_account in flickr_accounts %}
 			<li>
 				<a href="/fl/{{ flickr_account.nsid }}">{{ flickr_account.nsid }}</a>
-{% if twitter_account.hide_last_values %}
+{% if flickr_account.hide_last_values %}
 						(<a href="/account_hide_toggle?acc_type=flickr&amp;flickr_id={{ flickr_account.nsid }}">show last 24hrs</a>)
 {% else %}
 						(<a href="/account_hide_toggle?acc_type=flickr&amp;flickr_id={{ flickr_account.nsid }}">hide last 24hrs</a>)
 {% endif %}
+                (<a href="/flickr_account_delete?flickr_id={{ flickr_account.nsid }}">delete</a>)
 			</li>
 {% endfor %}
 		</ul>

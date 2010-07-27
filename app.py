@@ -32,6 +32,7 @@ import sys
 import datetime
 import logging
 import md5
+import urllib
 
 from google.appengine.ext.webapp import template
 from google.appengine.api import memcache
@@ -125,6 +126,16 @@ class LookupHandler(webapp.RequestHandler):
         if q4.count() == 1:
             t_account = q4.get()
             key = t_account.account.key()
+            m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
+            memcache.add('lookup_'+handle, key, 5)
+            return
+
+        q5 = FlickrAccount.all()
+        q5.filter('nsid =', urllib.unquote(handle))
+
+        if q5.count() == 1:
+            fl_account = q5.get()
+            key = fl_account.account.key()
             m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
             memcache.add('lookup_'+handle, key, 5)
             return
@@ -412,7 +423,7 @@ class AccountHideToggle(webapp.RequestHandler):
                 self.redirect('/profile')
 
         elif acc_type == 'flickr':
-            flickr_id = str(self.request.get('flickr_id'))
+            flickr_id = urllib.unquote(self.request.get('flickr_id'))
             u_acc = m256.get_user_model()
 
             q1 = FlickrAccount.all()
@@ -657,6 +668,29 @@ class FlickrCallbackHandler(webapp.RequestHandler):
         m256.output_template(self, 'templates/callback.tmpl', {'map_url': url, 'page_title': 'Authorization Completed', 'page_header': 'Authorization Completed'})
         m256.notify_admin("New Flickr account added: http://www.map256.com%s" % url)
 
+class FlickrAccountDeleteHandler(webapp.RequestHandler):
+    def get(self):
+        flickr_id = urllib.unquote(self.request.get('flickr_id'))
+        u_acc = m256.get_user_model()
+
+        q1 = FlickrAccount.all()
+        q1.filter('nsid =', flickr_id)
+        q1.filter('account =', u_acc)
+
+        if q1.count() != 0:
+            #FIXME: Uh, filtering on a single property here.  50?
+            r1 = q1.fetch(50)
+
+            for flickr_account in r1:
+                q2 = FlickrCheckin.all(keys_only=True)
+                q2.filter('owner =', flickr_account)
+                db.delete(q2.fetch(1000)) #FIXME: Won't delete all
+                flickr_account.delete()
+
+            m256.output_template(self, 'templates/account_deleted.tmpl', {'page_title': 'Account Deleted', 'page_header': 'Account Deleted'})
+        else:
+            self.redirect('/profile')
+
 def main():
 
     routes = [
@@ -673,8 +707,10 @@ def main():
         ('/twitter_account_delete', TwitterAccountDeleteHandler),
         ('/flickr_authorization', FlickrAuthorizationHandler),
         ('/flickr_callback', FlickrCallbackHandler),
+        ('/flickr_account_delete', FlickrAccountDeleteHandler),
         ('/data/(.*)', DataHandler),
         ('/t/(.*)', LookupHandler),
+        ('/fl/(.*)', LookupHandler),
         ('/f/(.*)', LookupHandler)
     ]
 
