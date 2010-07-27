@@ -224,7 +224,7 @@ class FlickrHistoryWorker(webapp.RequestHandler):
                 ci.location = str(photo['latitude'])+','+str(photo['longitude'])
                 ci.photo_url = photo['url_sq']
                 ci.photo_id = str(photo['id'])
-                ci.description = photo['url_sq']
+                ci.description = '<img src="'+photo['url_sq']+'" width="75" height="75" />'
                 ci.account_owner = flickr_account.account
                 ci.put()
 
