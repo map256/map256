@@ -142,11 +142,11 @@ class FlickrHistoryWorker(webapp.RequestHandler):
         if self.request.get('since'):
             date = self.request.get('since')
             dateencoded = urllib.quote(date)
-            m.update(flickr_api_secret+'api_key'+flickr_api_key+'auth_token'+flickr_account.auth_token+'extrasdescription,date_taken,url_sq,geoformatjson'+'methodflickr.photos.getWithGeoData'+'min_taken_date'+date+'privacy_filter1sortdate-taken-asc')
-            url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc&min_taken_date='+dateencoded
+            m.update(flickr_api_secret+'api_key'+flickr_api_key+'auth_token'+flickr_account.auth_token+'extrasdescription,date_taken,url_sq,geoformatjson'+'methodflickr.photos.getWithGeoData'+'min_taken_date'+date+'per_page50privacy_filter1sortdate-taken-asc')
+            url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&per_page=50&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc&min_taken_date='+dateencoded
         else:
-            m.update(flickr_api_secret+'api_key'+flickr_api_key+'auth_token'+flickr_account.auth_token+'extrasdescription,date_taken,url_sq,geoformatjson'+'methodflickr.photos.getWithGeoData'+'privacy_filter1sortdate-taken-asc')
-            url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc'
+            m.update(flickr_api_secret+'api_key'+flickr_api_key+'auth_token'+flickr_account.auth_token+'extrasdescription,date_taken,url_sq,geoformatjson'+'methodflickr.photos.getWithGeoData'+'per_page50privacy_filter1sortdate-taken-asc')
+            url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&per_page=50&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc'
 
         try:
             result = urlfetch.fetch(url)
@@ -228,7 +228,7 @@ class FlickrHistoryWorker(webapp.RequestHandler):
                 ci.account_owner = flickr_account.account
                 ci.put()
 
-        if len(userdata['photos']['photo']) > 1:
+        if len(userdata['photos']['photo']) > 49:
             lngth = len(userdata['photos']['photo']) - 1
             date = urllib.quote(userdata['photos']['photo'][lngth]['datetaken'])
             taskqueue.add(url='/worker_flickr_history', params={'flickr_id': flickr_id, 'since': date})
