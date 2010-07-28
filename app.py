@@ -242,6 +242,9 @@ class FoursquareAuthorizationHandler(webapp.RequestHandler):
         except urlfetch.DownloadError:
             m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_request_token_url)
             return
+        except Exception, e:
+            m256.output_error(self, 'Exception requesting URL (url: %s, msg: %s)' % (m256.foursquare_request_token_url, e))
+            return
 
         request_token = dict(cgi.parse_qsl(content))
 
@@ -283,6 +286,9 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
         except urlfetch.DownloadError:
             m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_access_token_url)
             return
+        except Exception, e:
+            m256.output_error(self, 'Exception requesting URL (url: %s, msg: %s)' % (m256.foursquare_access_token_url, e))
+            return
 
         access_token = dict(cgi.parse_qsl(content))
 
@@ -298,6 +304,9 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
             content = m256.foursquare_token_request(m256.foursquare_userdetail_url, 'GET', access_token['oauth_token'], access_token['oauth_token_secret'])
         except urlfetch.DownloadError:
             m256.output_error(self, 'DownloadError requesting %s' % m256.foursquare_userdetail_url)
+            return
+        except Exception, e:
+            m256.output_error(self, 'Exception requesting URL (url: %s, msg: %s)' % (m256.foursquare_userdetail_url, e))
             return
 
         userinfo = simplejson.loads(content)
