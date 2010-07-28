@@ -45,7 +45,7 @@ class FoursquareHistoryDispatcher(webapp.RequestHandler):
 
             q2 = FoursquareCheckin.all()
             q2.filter('owner = ', user)
-            q2.order('-checkin_id')
+            q2.order('-occurred')
 
             if q2.count() > 0:
                 latest = q2.get()
@@ -67,7 +67,7 @@ class TwitterHistoryDispatcher(webapp.RequestHandler):
 
             q2 = TwitterCheckin.all()
             q2.filter('owner =', user)
-            q2.order('-tweet_id')
+            q2.order('-occurred')
 
             if q2.count() > 0:
                 latest = q2.get()
