@@ -181,6 +181,7 @@ class FlickrHistoryWorker(webapp.RequestHandler):
 
         if len(userdata['photos']['photo']) > 0:
             for photo in userdata['photos']['photo']:
+                #FIXME: Only using this for count, can probably switch to keys-only
                 q2 = FlickrCheckin.all()
                 q2.filter('photo_id = ', str(photo['id']))
 

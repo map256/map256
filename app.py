@@ -65,16 +65,19 @@ class FrontHandler(webapp.RequestHandler):
                 q2 = FoursquareCheckin.all()
                 q2.filter('owner = ', fsq_account)
                 q2.order('-occurred')
-                r2 = q2.fetch(10)
+                r2 = q2.fetch(15)
                 tmpa = []
 
                 for res2 in r2:
                     tmpa.append(str(res2.location))
 
-                fsq_accounts[str(fsq_account.foursquare_id)] = tmpa
+                if fsq_account.twitter_username is not None:
+                    fsq_accounts[str(fsq_account.twitter_username)] = tmpa
+                else:
+                    fsq_accounts[str(fsq_account.foursquare_id)] = tmpa
 
             frontpage_userlist = simplejson.dumps(fsq_accounts)
-            memcache.add('frontpage_userlist', frontpage_userlist, 300)
+            memcache.add('frontpage_userlist', frontpage_userlist, 30)
 
         m256.output_template(self, 'templates/front.tmpl', {'frontpage_userlist': frontpage_userlist, 'page_title': 'Main'})
 
@@ -180,7 +183,6 @@ class ProfileHandler(webapp.RequestHandler):
 
         m256.output_template(self, 'templates/profile.tmpl', template_values)
 
-#FIXME: To sanitize
 class DataHandler(webapp.RequestHandler):
     def get(self, key=None):
         data = memcache.get('checkindata_'+key)
@@ -192,23 +194,25 @@ class DataHandler(webapp.RequestHandler):
             try:
                 k1 = db.Key(key)
             except:
-                self.response.out.write('A')
                 return
 
             user = Account.get(k1)
 
             if user is None:
-                self.response.out.write('B')
                 return
 
-            checkins = Checkin.all()
-            checkins.filter('account_owner =', user)
+            q1 = Checkin.all()
+            q1.filter('account_owner =', user)
+            q1.order('-occurred')
 
-            if checkins.count() == 0:
-                self.response.out.write('C')
+            if q1.count() == 0:
                 return
 
-            for checkin in checkins:
+            #FIXME: Putting a cap here, so that results dont take excessive time to return
+            #Will likely implement GAE Datastore cursors
+            r1 = q1.fetch(250)
+
+            for checkin in r1:
                 info = {}
 
                 if checkin.owner.hide_last_values:
@@ -218,7 +222,6 @@ class DataHandler(webapp.RequestHandler):
                         continue
 
                 info['location'] = str(checkin.location)
-                info['occurred'] = str(checkin.occurred)
                 #FIXME: So, turns out some browsers doing JSON decoding dont parse Unicode properly.  Dropping chars for now, need to find better libs later.
                 info['description'] = checkin.description.encode('ascii', 'replace')
                 #FIXME: At some point should pretty print this, and set it to a saner timezone
@@ -229,7 +232,7 @@ class DataHandler(webapp.RequestHandler):
                                           datetime.datetime.strptime(y['occurred'], '%Y-%m-%d %H:%M:%S')), reverse=True)
 
             encoded = simplejson.dumps(data)
-            memcache.add('checkindata_'+key, encoded, 60)
+            memcache.add('checkindata_'+key, encoded, 150)
             self.response.out.write(encoded)
         else:
             self.response.out.write(data)
