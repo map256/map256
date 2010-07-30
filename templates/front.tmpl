@@ -15,15 +15,17 @@
 {% endblock %}
 
 {% block content %}
-		<div id="map_canvas" style="width: 100%; height: 100%;"></div>
-		<div id="container" style = "position:absolute; bottom:35px; left:50px; width:375px; padding:10px; background-color:#FFFFFF">
-			<span style = "font-size:16pt;"><a href="/">Map256</a></span>
+		<div id="map_canvas"></div>
+		<div id="container">
+			<h1>
+			    <a href="/">Map256</a>
 {% if logged_in %}
-			<span style = "font-size:9pt;">(<a href="/faq">FAQ</a>, <a href="/profile">profile</a>, <a href="{{ signout_url }}">sign out</a>)</span>
+			    <span id="submenu">(<a href="/faq">FAQ</a>, <a href="/profile">profile</a>, <a href="{{ signout_url }}">sign out</a>)</span>
 {% else %}
-			<span style = "font-size:9pt;">(<a href="/faq">FAQ</a>)</span>
+			    <span id="submenu">(<a href="/faq">FAQ</a>)</span>
 {% endif %}
 {% if not logged_in %}
+            </h1>
 			<hr>
 			<p>Want to get started plotting your own travels?  Sign in to <a href="/profile">Map256</a> (Google Account login required).</p>
 {% endif %}
