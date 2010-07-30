@@ -401,13 +401,48 @@ class StatisticsWorker(webapp.RequestHandler):
         stat.contents = results
         stat.put()
 
+class AccountDeleteWorker(webapp.RequestHandler):
+    def post(self):
+        account_key = self.request.get('account_key')
+
+        if account_key is None:
+            logging.info('A')
+            return
+
+        try:
+            k1 = db.Key(account_key)
+        except:
+            logging.info('B %s' % account_key)
+            return
+
+        account = ServiceAccount.get(k1)
+
+        if account is None:
+            logging.info('C')
+            return
+
+        q1 = Checkin.all()
+        q1.filter('owner = ', account)
+
+        if q1.count() > 100:
+            db.delete(q1.fetch(100))
+            logging.info('Adding additional deletion worker for account key: %s' % account_key)
+            taskqueue.add(url='/worker_account_delete', params={'account_key': account_key})
+        else:
+            db.delete(q1.fetch(100))
+            #FIXME: Should invalidate memcaches here
+            logging.info('Finishing account delete of %s' % account_key)
+            m256.notify_admin('Account deleted: %s' % account_key)
+            account.delete()
+
 def main():
 
     routes = [
         ('/worker_foursquare_history', FoursquareHistoryWorker),
         ('/worker_flickr_history', FlickrHistoryWorker),
         ('/worker_twitter_history', TwitterHistoryWorker),
-        ('/worker_statistics', StatisticsWorker)
+        ('/worker_statistics', StatisticsWorker),
+        ('/worker_account_delete', AccountDeleteWorker)
     ]
 
     application = webapp.WSGIApplication(routes, debug=True)

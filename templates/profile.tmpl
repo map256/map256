@@ -47,7 +47,7 @@
 {% else %}
 						(<a href="/account_hide_toggle?acc_type=flickr&amp;flickr_id={{ flickr_account.nsid }}">hide last 24hrs</a>)
 {% endif %}
-                (<a href="/flickr_account_delete?flickr_id={{ flickr_account.nsid }}">delete</a>)
+                (<a href="/profile/account_delete?account_key={{ flickr_account.key }}">delete</a>)
 			</li>
 {% endfor %}
 		</ul>

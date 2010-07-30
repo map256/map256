@@ -30,7 +30,7 @@ handlers:
 - url: /scoreboard
   script: app.py
 
-- url: /profile
+- url: /profile(.*)
   script: app.py
   login: required
 
@@ -67,10 +67,6 @@ handlers:
   login: required
 
 - url: /flickr_callback
-  script: app.py
-  login: required
-
-- url: /flickr_account_delete
   script: app.py
   login: required
 

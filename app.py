@@ -680,28 +680,30 @@ class FlickrCallbackHandler(webapp.RequestHandler):
         m256.output_template(self, 'templates/callback.tmpl', {'map_url': url, 'page_title': 'Authorization Completed', 'page_header': 'Authorization Completed'})
         m256.notify_admin("New Flickr account added: http://www.map256.com%s" % url)
 
-class FlickrAccountDeleteHandler(webapp.RequestHandler):
+class AccountDeleteHandler(webapp.RequestHandler):
     def get(self):
-        flickr_id = urllib.unquote(self.request.get('flickr_id'))
+        account_key = self.request.get('account_key')
+
+        if account_key is None:
+            self.redirect('/profile')
+
+        try:
+            k1 = db.Key(account_key)
+        except:
+            self.redirect('/profile')
+
+        account = ServiceAccount.get(k1)
+
+        if account is None:
+            self.redirect('/profile')
+
         u_acc = m256.get_user_model()
 
-        q1 = FlickrAccount.all()
-        q1.filter('nsid =', flickr_id)
-        q1.filter('account =', u_acc)
-
-        if q1.count() != 0:
-            #FIXME: Uh, filtering on a single property here.  50?
-            r1 = q1.fetch(50)
-
-            for flickr_account in r1:
-                q2 = FlickrCheckin.all(keys_only=True)
-                q2.filter('owner =', flickr_account)
-                db.delete(q2.fetch(1000)) #FIXME: Won't delete all
-                flickr_account.delete()
-
-            m256.output_template(self, 'templates/account_deleted.tmpl', {'page_title': 'Account Deleted', 'page_header': 'Account Deleted'})
-        else:
+        if account.account != u_acc:
             self.redirect('/profile')
+
+        taskqueue.add(url='/worker_account_delete', params={'account_key': account.key()})
+        m256.output_template(self, 'templates/account_deleted.tmpl', {'page_title': 'Account Deleted', 'page_header': 'Account Deleted'})
 
 def main():
 
@@ -719,7 +721,7 @@ def main():
         ('/twitter_account_delete', TwitterAccountDeleteHandler),
         ('/flickr_authorization', FlickrAuthorizationHandler),
         ('/flickr_callback', FlickrCallbackHandler),
-        ('/flickr_account_delete', FlickrAccountDeleteHandler),
+        ('/profile/account_delete', AccountDeleteHandler),
         ('/data/(.*)', DataHandler),
         ('/t/(.*)', LookupHandler),
         ('/fl/(.*)', LookupHandler),
