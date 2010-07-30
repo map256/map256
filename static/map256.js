@@ -1,3 +1,54 @@
+//var map;
+//var lines;
+
+function add_user_to_map(user_url, user_data) {
+    var path = new Array();
+
+    /*
+    for (var key in coords) {
+        var geodata = [key].split(',');
+        path.push(new google.maps.LatLng(geodata[0], geodata[1]));
+    }
+
+    lines.push(new google.maps.Polyline({
+        path: path,
+        strokeColor: "#FF0000",
+        strokeOpacity: 1.0,
+        strokeWeight: 4,
+        map: map
+    }));
+    */
+}
+
+function add_front_page_data(retrieved_data) {
+    for (var key in retrieved_data) {
+        add_user_to_map(retrieved_data[key]);
+    }
+}
+
+function change_page_type (target_type) {
+    //Clear page
+
+    if (target_type == 'frontpage') {
+        $.getJSON('/static/test.json', function(data) { add_front_page_data(data); })
+    }
+}
+
+function initialize_page () {
+    var mapOptions = {
+        zoom: 4,
+        center: new google.maps.LatLng(37.958135,-91.773429),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+
+    map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+
+    // Check for URL contents here
+    change_page_type('frontpage');
+}
+
+/* --------------------- OLD AND BAD BELOW THIS LINE ---------------------- */
+
 var markers = new Array();
 var lines = new Array();
 var infowindows = new Array();

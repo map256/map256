@@ -79,7 +79,7 @@ class FrontHandler(webapp.RequestHandler):
             frontpage_userlist = simplejson.dumps(fsq_accounts)
             memcache.add('frontpage_userlist', frontpage_userlist, 30)
 
-        m256.output_template(self, 'templates/front.tmpl', {'frontpage_userlist': frontpage_userlist, 'page_title': 'Main'})
+        m256.output_template(self, 'templates/front2.tmpl', {'frontpage_userlist': frontpage_userlist, 'page_title': 'Main'})
 
 #FIXME: To sanitize
 class LookupHandler(webapp.RequestHandler):
