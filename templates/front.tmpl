@@ -17,16 +17,16 @@
 {% block content %}
 		<div id="map_canvas"></div>
 		<div id="container">
-			<h1>
+			<h1 id="front_title">
 			    <a href="/">Map256</a>
 {% if logged_in %}
-			    <span id="submenu">(<a href="/faq">FAQ</a>, <a href="/profile">profile</a>, <a href="{{ signout_url }}">sign out</a>)</span>
+			    <span id="front_submenu">(<a href="/faq">FAQ</a>, <a href="/profile">profile</a>, <a href="{{ signout_url }}">sign out</a>)</span>
 {% else %}
-			    <span id="submenu">(<a href="/faq">FAQ</a>)</span>
+			    <span id="front_submenu">(<a href="/faq">FAQ</a>)</span>
 {% endif %}
 {% if not logged_in %}
             </h1>
 			<hr>
-			<p>Want to get started plotting your own travels?  Sign in to <a href="/profile">Map256</a> (Google Account login required).</p>
+			<p><a href="/profile">Sign in</a> to get started plotting your own travels! (Google Account login required).</p>
 {% endif %}
 {% endblock %}
