@@ -83,7 +83,9 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
             m256.downloaderror_check()
             return
         except Exception, e:
-            m256.output_error(self, 'Exception requesting URL (url: %s, msg: %s)' % (request_url, e))
+            errmsg = 'Exception requesting URL (url: %s, msg: %s)' % (request_url, e)
+            logging.error(errmsg)
+            m256.notify_admin(errmsg)
             return
 
         history = simplejson.loads(content)
@@ -282,6 +284,11 @@ class TwitterHistoryWorker(webapp.RequestHandler):
                                                  t_acct.access_secret)
         except urlfetch.DownloadError:
             m256.downloaderror_check()
+            return
+        except Exception, e:
+            errmsg = 'Exception requesting URL (url: %s, msg: %s)' % (request_url, e)
+            logging.error(errmsg)
+            m256.notify_admin(errmsg)
             return
 
         history = simplejson.loads(content)
