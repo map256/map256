@@ -101,7 +101,21 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
             q2.filter('checkin_id = ', str(checkin['id']))
 
             if q2.count() == 0:
-                #FIXME: Should verify all of these properties exist before adding
+                if 'created' not in checkin:
+                    continue
+
+                if 'venue' not in checkin:
+                    continue
+
+                if 'geolat' not in checkin['venue']:
+                    continue
+
+                if 'geolong' not in checkin['venue']:
+                    continue
+
+                if 'name' not in checkin['venue']:
+                    continue
+
                 logging.info('Dont have existing record, going to create new checkin')
                 ci = FoursquareCheckin()
                 ci.foursquare_id = str(fsq_id)
