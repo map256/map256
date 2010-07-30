@@ -83,7 +83,7 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
             m256.downloaderror_check()
             return
         except Exception, e:
-            m256.output_error(self, 'Exception requesting URL (url: %s, msg: %s)' % (m256.foursquare_request_token_url, e))
+            m256.output_error(self, 'Exception requesting URL (url: %s, msg: %s)' % (request_url, e))
             return
 
         history = simplejson.loads(content)
