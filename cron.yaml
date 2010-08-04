@@ -1,7 +1,7 @@
 cron:
-#- description: Foursquare history retrieval job
-#  url: /cron_foursquare_history
-#  schedule: every 5 minutes
+- description: Foursquare history retrieval job
+  url: /cron_foursquare_history
+  schedule: every 5 minutes
 
 - description: Twitter history retrieval job
   url: /cron_twitter_history

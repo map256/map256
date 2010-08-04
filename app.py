@@ -52,7 +52,12 @@ from models import *
 
 class FrontHandler(webapp.RequestHandler):
     def get(self):
+        m256.output_template(self, 'templates/front.tmpl', {'page_title': 'Main'})
+
+class FrontPageDataHandler(webapp.RequestHandler):
+    def get(self):
         frontpage_userlist = memcache.get('frontpage_userlist')
+        self.response.headers.add_header('Content-Type', 'application/json')
 
         if frontpage_userlist is None:
 
@@ -79,7 +84,7 @@ class FrontHandler(webapp.RequestHandler):
             frontpage_userlist = simplejson.dumps(fsq_accounts)
             memcache.add('frontpage_userlist', frontpage_userlist, 30)
 
-        m256.output_template(self, 'templates/front2.tmpl', {'frontpage_userlist': frontpage_userlist, 'page_title': 'Main'})
+        self.response.out.write(frontpage_userlist)
 
 #FIXME: To sanitize
 class LookupHandler(webapp.RequestHandler):
@@ -712,6 +717,7 @@ def main():
         ('/faq', FaqHandler),
         ('/scoreboard', ScoreboardHandler),
         ('/profile', ProfileHandler),
+        ('/front_page_data', FrontPageDataHandler),
         ('/account_hide_toggle', AccountHideToggle),
         ('/foursquare_authorization', FoursquareAuthorizationHandler),
         ('/foursquare_callback', FoursquareCallbackHandler),

@@ -15,6 +15,9 @@ handlers:
 - url: /faq
   script: app.py
 
+- url: /front_page_data
+  script: app.py
+
 - url: /t/(.*)
   script: app.py
 
