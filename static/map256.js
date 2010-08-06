@@ -1,90 +1,8 @@
 var map;
 var users = new Object();
-
-function createMarker(marker, infowindow) {
-	google.maps.event.addListener(marker, 'click', function() {
-		infowindow.open(map, marker);
-	})
-}
-
-function add_user_to_map(user_key, point_data, line_color) {
-    users[user_key] = 1;
-    var path = new Array();
-    var markers = new Array();
-    var infowindows = new Array();
-
-    for (var key in point_data) {
-        var geodata = point_data[key].split(',');
-        path.push(new google.maps.LatLng(geodata[0], geodata[1]));
-    }
-
-    users[user_key]['line'] = new google.maps.Polyline({
-        path: path,
-        strokeColor: line_color,
-        strokeOpacity: 1.0,
-        strokeWeight: 4,
-        map: map
-    });
-
-    var first_point = point_data[0].split(',');
-
-    markers.push(new google.maps.Marker({
-		position: new google.maps.LatLng(first_point[0], first_point[1]),
-		map: map,
-		title: user_key
-	}));
-
-    users[user_key]['markers'] = markers;
-
-	infowindows.push(new google.maps.InfoWindow({
-		content: "<h4><a href=\"/f/"+user_key+"\">"+user_key+"</a></h4>",
-		maxWidth: 200
-	}));
-	
-	users[user_key]['infowindows'] = infowindows;
-
-    for (var key in markers) {
-	    createMarker(markers[key], infowindows[key]);
-    }
-}
-
-function add_front_page_data(retrieved_data) {
-    for (var key in retrieved_data) {
-        add_user_to_map(key, retrieved_data[key], '#FF0000');
-    }
-}
-
-function change_page_type (target_type) {
-    //Clear page
-
-    if (target_type == 'frontpage') {
-        $.getJSON('/front_page_data', function(data) { add_front_page_data(data); })
-    }
-}
-
-function initialize_page () {
-    var mapOptions = {
-        zoom: 4,
-        center: new google.maps.LatLng(37.958135,-91.773429),
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-
-    map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
-
-    // Check for URL contents here
-    change_page_type('frontpage');
-}
-
-/* --------------------- OLD AND BAD BELOW THIS LINE ---------------------- */
-
-var markers = new Array();
-var lines = new Array();
-var infowindows = new Array();
+var marker_position = 0;
 var markers_visible = false;
 var gradient_visible = false;
-var marker_position = 0;
-var centerpt = new google.maps.LatLng(37.958135,-91.773429);
-var map;
 
 function hex (c) {
 	var s = "0123456789abcdef";
@@ -111,20 +29,6 @@ function convertToRGB (hex) {
 	return color;
 }
 
-function toggle_markers() {
-	if ( markers_visible == false ) {
-		for (var x in markers) {
-			markers[x].setVisible(true);
-		}
-		markers_visible = true;
-	} else {
-		for (var x in markers) {
-			markers[x].setVisible(false);
-		}
-		markers_visible = false;
-	}
-}
-
 function toggle_gradient() {
 	var start_col = convertToRGB('#FF0000');
 	var end_col = convertToRGB('#0000FF');
@@ -132,46 +36,54 @@ function toggle_gradient() {
 	var cur_col = '#FF0000';
 
 	if ( gradient_visible == false ) {
-		for (var x = 0; x < lines.length; x++) {
+		for (var x = 0; x < users['huh']['lines'].length; x++) {
 			var c = [];
-			var tmp_a = 1 - (x / (lines.length - 1));
+			var tmp_a = 1 - (x / (users['huh']['lines'].length - 1));
 			c[0] = start_col[0] * tmp_a + (1 - tmp_a) * end_col[0];
 			c[1] = start_col[1] * tmp_a + (1 - tmp_a) * end_col[1];
 			c[2] = start_col[2] * tmp_a + (1 - tmp_a) * end_col[2];
 			cur_col = '#' + convertToHex(c);
-			lines[x].setOptions({ strokeColor: cur_col});
+			users['huh']['lines'][x].setOptions({ strokeColor: cur_col});
 		}
 
 		gradient_visible = true;
 	} else {
-		for (var x = 0; x < lines.length; x++) {
-			lines[x].setOptions({ strokeColor: '#000000'});
+		for (var x = 0; x < users['huh']['lines'].length; x++) {
+			users['huh']['lines'][x].setOptions({ strokeColor: '#000000'});
 		}
 
 		gradient_visible = false;
 	}
 }
 
-function goto_latest() {
-	markers[marker_position].setVisible(false);
-	marker_position = 0;
-	markers[marker_position].setVisible(true);
+function toggle_markers() {
+	if ( markers_visible == false ) {
+		for (var x in users['huh']['markers']) {
+			users['huh']['markers'][x].setVisible(true);
+		}
+		markers_visible = true;
+	} else {
+		for (var x in users['huh']['markers']) {
+			users['huh']['markers'][x].setVisible(false);
+		}
+		markers_visible = false;
+	}
 }
 
 function goto_previous() {
-	markers[marker_position].setVisible(false);
+	users['huh']['markers'][marker_position].setVisible(false);
 
-	if (marker_position < (markers.length-2) ) {
+	if (marker_position < (users['huh']['markers'].length-2) ) {
 		marker_position = marker_position + 1;
 	} else {
-		marker_position = markers.length - 1;
+		marker_position = users['huh']['markers'].length - 1;
 	}
 
-	markers[marker_position].setVisible(true);
+	users['huh']['markers'][marker_position].setVisible(true);
 }
 
 function goto_next() {
-	markers[marker_position].setVisible(false);
+	users['huh']['markers'][marker_position].setVisible(false);
 
 	if (marker_position == 0) {
 		marker_position = 0;
@@ -179,99 +91,202 @@ function goto_next() {
 		marker_position = marker_position - 1;
 	}
 
-	markers[marker_position].setVisible(true);
-}
-
-function goto_earliest() {
-	markers[marker_position].setVisible(false);
-	marker_position = markers.length - 1;
-	markers[marker_position].setVisible(true);
+	users['huh']['markers'][marker_position].setVisible(true);
 }
 
 function setvalue(event, ui) {
 	var valx = $("#slider").slider( "option", "value" );
-	markers[marker_position].setVisible(false);
-	marker_position = (checkin_data.length-1) - valx;
-	markers[marker_position].setVisible(true);
-	map.setCenter(markers[marker_position].getPosition());
+	users['huh']['markers'][marker_position].setVisible(false);
+	marker_position = (users['huh']['markers'].length-1) - valx;
+	users['huh']['markers'][marker_position].setVisible(true);
+	map.setCenter(users['huh']['markers'][marker_position].getPosition());
 }
 
-function aftershock(data) {
+function goto_earliest() {
+	users['huh']['markers'][marker_position].setVisible(false);
+	marker_position = users['huh']['markers'].length - 1;
+	users['huh']['markers'][marker_position].setVisible(true);
+}
 
-	var mapOptions = {
-		zoom: 12,
-		center: centerpt,
-		mapTypeId: google.maps.MapTypeId.ROADMAP
-	};
+function goto_latest() {
+	users['huh']['markers'][marker_position].setVisible(false);
+	marker_position = 0;
+	users['huh']['markers'][marker_position].setVisible(true);
+}
 
-	map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+function createMarker(marker, infowindow) {
+	google.maps.event.addListener(marker, 'click', function() {
+		infowindow.open(map, marker);
+	});
+}
 
-	for (var i=1; i<checkin_data.length; i++) {
-		if (checkin_data[i-1]['location'] != checkin_data[i]['location']) {
-			var tmp_a = checkin_data[i-1]['location'].split(",");
-			var tmp_b = checkin_data[i]['location'].split(",");
+function add_user_to_map(user_key, point_data, line_color) {
+    if (point_data.length < 1) {
+        return;
+    }
+
+    users[user_key] = new Object();
+    var lines = new Array();
+
+	for (var i=1; i<point_data.length; i++) {
+		if (point_data[i-1]['location'] != point_data[i]['location']) {
+			var tmp_a = point_data[i-1]['location'].split(",");
+			var tmp_b = point_data[i]['location'].split(",");
 
 			lines.push(new google.maps.Polyline({
 				path: new Array(new google.maps.LatLng(tmp_a[0], tmp_a[1]), new google.maps.LatLng(tmp_b[0], tmp_b[1])),
-				strokeColor: "#000000",
+				strokeColor: line_color,
 				strokeOpacity: 1.0,
-				strokeWeight: 2
+				strokeWeight: 3,
+				map: map
 			}));
 		}
 	}
 
-	for (var y in checkin_data) {
-		var tmp = checkin_data[y]['location'].split(",");
-		markers.push(new google.maps.Marker({
-			position: new google.maps.LatLng(tmp[0], tmp[1]),
-			map: map,
-			visible: false
-		}));
+    users[user_key]['lines'] = lines;
+}
 
-		infowindows.push(new google.maps.InfoWindow({
-			content: "<p><strong>"+checkin_data[y]['description']+"</strong><br><em>"+checkin_data[y]['occurred']+"</em></p>",
-			maxWidth: 200
-		}));
-	}
+function add_markers_to_user(user_key, marker_data) {
+    var markers = new Array();
 
-	for (var x in lines) {
-		lines[x].setMap(map);
-	}
+    for (var key in marker_data) {
+        point = marker_data[key]['location'].split(',');
+        markers.push(new google.maps.Marker({
+		    position: new google.maps.LatLng(point[0], point[1]),
+		    map: map,
+		    title: marker_data[key]['title'],
+		    visible: false
+	    }));
+    }
 
-	for (var key2 in markers) {
-		createMarker(markers[key2], infowindows[key2], map);
-	}
+    users[user_key]['markers'] = markers;
+}
 
-	if (checkin_data.length > 0) {
-		var tmp = checkin_data[0]['location'].split(",");
-		centerpt = new google.maps.LatLng(tmp[0], tmp[1]);
-		map.setCenter(centerpt);
-		markers[0].setVisible(true);
-	}
+function add_infowindows_to_user(user_key, infowindow_data) {
+    var infowindows = new Array();
 
-	var sld_max = checkin_data.length-1
+    for (var key in infowindow_data) {
+        infowindows.push(new google.maps.InfoWindow({
+	        content: infowindow_data[key]['content'],
+		    maxWidth: 200
+	    }));
+    }
 
+	users[user_key]['infowindows'] = infowindows;
+}
+
+function add_front_page_data(retrieved_data) {
+    for (var key in retrieved_data) {
+        user = retrieved_data[key];
+        $.getJSON('/data/'+user['account_key'], function(data) {
+            //FIXME: Need to check to see if data[0] exists
+            add_user_to_map(user['account_key'], data, '#FF0000');
+            marker_data = new Array();
+            marker_dict = new Object();
+            marker_dict['location'] = data[0]['location'];
+            marker_dict['title'] = user['url'];
+            marker_data[0] = marker_dict;
+            add_markers_to_user(user['account_key'], marker_data);
+            infowindow_data = new Array();
+            infowindow_dict = new Object();
+            infowindow_dict['content'] = '<h4><a href=\"'+user['url']+'\">'+user['name']+'</a></h4>';
+            infowindow_data[0] = infowindow_dict;
+            add_infowindows_to_user(user['account_key'], infowindow_data);
+            createMarker(users[user['account_key']]['markers'][0], users[user['account_key']]['infowindows'][0]);
+            users[user['account_key']]['markers'][0].setVisible(true);
+        });
+    }
+}
+
+function add_user_page_data(retrieved_data) {
+    add_user_to_map('huh', retrieved_data, '#FF0000');
+    marker_data = new Array();
+    infowindow_data = new Array();
+    for (var key in retrieved_data) {
+        var marker_dict = new Object();
+        marker_dict['location'] = retrieved_data[key]['location'];
+        marker_dict['title'] = 'foo';
+        var infowindow_dict = new Object();
+        infowindow_dict['content'] = "<p><strong>"+retrieved_data[key]['description']+"</strong><br><em>"+retrieved_data[key]['occurred']+"</em></p>",
+        marker_data[key] = marker_dict;
+        infowindow_data[key] = infowindow_dict;
+    }
+    add_markers_to_user('huh', marker_data);
+    add_infowindows_to_user('huh', infowindow_data);
+
+    for (var key in marker_data) {
+        createMarker(users['huh']['markers'][key], users['huh']['infowindows'][key]);
+    }
+
+    users['huh']['markers'][0].setVisible(true);
+
+    var tmp = retrieved_data[0]['location'].split(",");
+	centerpt = new google.maps.LatLng(tmp[0], tmp[1]);
+	map.setCenter(centerpt);
+
+	var sld_max = retrieved_data.length-1
 	$(document).ready(function() {
 	  $("#slider").slider({ min: 0, max: sld_max, slide: setvalue, value: sld_max });
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_n"), "click", function(ev) {
-		map.setCenter(markers[marker_position].getPosition());
-		$("#slider").slider( "option", "value", (checkin_data.length-1) - marker_position );
+		map.setCenter(users['huh']['markers'][marker_position].getPosition());
+		$("#slider").slider( "option", "value", sld_max - marker_position );
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_l"), "click", function(ev) {
-		map.setCenter(markers[marker_position].getPosition());
-		$("#slider").slider( "option", "value", (checkin_data.length-1) - marker_position );
+		map.setCenter(users['huh']['markers'][marker_position].getPosition());
+		$("#slider").slider( "option", "value", sld_max - marker_position );
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_p"), "click", function(ev) {
-		map.setCenter(markers[marker_position].getPosition());
-		$("#slider").slider( "option", "value", (checkin_data.length-1) - marker_position );
+		map.setCenter(users['huh']['markers'][marker_position].getPosition());
+		$("#slider").slider( "option", "value", sld_max - marker_position );
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_e"), "click", function(ev) {
-		map.setCenter(markers[marker_position].getPosition());
-		$("#slider").slider( "option", "value", (checkin_data.length-1) - marker_position );
+		map.setCenter(users['huh']['markers'][marker_position].getPosition());
+		$("#slider").slider( "option", "value", sld_max - marker_position );
 	});
+}
+
+function look_up_user(retrieved_data) {
+    $.getJSON('/data/'+retrieved_data['account_key'], function(data) { add_user_page_data(data); });
+}
+
+function change_page_type (target_type) {
+    //FIXME: clear page (remove all users, anything else?)
+
+    switch (target_type)
+    {
+        case 'frontpage':
+            $.getJSON('/front_page_data', function(data) { add_front_page_data(data); })
+            break;
+        case 'userpage':
+            var pathArray = window.location.pathname.split( '/' );
+            $.getJSON('/kl/'+pathArray[2], function(data) { look_up_user(data); })
+            break;
+        default:
+            $.getJSON('/front_page_data', function(data) { add_front_page_data(data); })
+            break;
+    }
+}
+
+function initialize_page () {
+    //FIXME: Need to redo this with a proper bounding box at some point
+    var mapOptions = {
+        zoom: 4,
+        center: new google.maps.LatLng(37.958135,-91.773429),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+
+    map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+
+    var pathArray = window.location.pathname.split( '/' );
+    //FIXME: Not at all pretty at the moment
+    if ( pathArray.length == 2 ) {
+        change_page_type('frontpage');
+    } else {
+        change_page_type('userpage');
+    }
 }

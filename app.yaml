@@ -27,6 +27,9 @@ handlers:
 - url: /fl/(.*)
   script: app.py
 
+- url: /kl/(.*)
+  script: app.py
+
 - url: /data/(.*)
   script: app.py
 

@@ -61,94 +61,101 @@ class FrontPageDataHandler(webapp.RequestHandler):
 
         if frontpage_userlist is None:
 
-            q1 = FoursquareAccount.all()
-            q1.filter('foursquare_disabled =', False)
+            data = []
+            q1 = Checkin.all()
+            q1.order('-occurred')
+            r1 = q1.fetch(50)
 
-            fsq_accounts = {}
-
-            for fsq_account in q1:
-                q2 = FoursquareCheckin.all()
-                q2.filter('owner = ', fsq_account)
-                q2.order('-occurred')
-                r2 = q2.fetch(15)
-                tmpa = []
-
-                for res2 in r2:
-                    tmpa.append(str(res2.location))
-
-                if fsq_account.twitter_username is not None:
-                    fsq_accounts[str(fsq_account.twitter_username)] = tmpa
+            for res1 in r1:
+                for item in data:
+                    if item['account_key'] == str(res1.account_owner.key()):
+                        break
                 else:
-                    fsq_accounts[str(fsq_account.foursquare_id)] = tmpa
+                    #FIXME: This needs to go away when we switch everything to ServiceAccounts
+                    if isinstance(res1.owner, FoursquareAccount):
+                        if res1.owner.twitter_username:
+                            data.append({'account_key': str(res1.account_owner.key()), 'url': '/t/'+res1.owner.twitter_username, 'name': res1.owner.twitter_username})
+                        else:
+                            data.append({'account_key': str(res1.account_owner.key()), 'url': '/f/'+res1.owner.foursquare_id, 'name': res1.owner.foursquare_id})
 
-            frontpage_userlist = simplejson.dumps(fsq_accounts)
+                    if isinstance(res1.owner, TwitterAccount):
+                        data.append({'account_key': str(res1.account_owner.key()), 'url': '/t/'+res1.owner.screen_name, 'name': res1.owner.screen_name})
+
+                    if isinstance(res1.owner, FlickrAccount):
+                        pass
+
+            frontpage_userlist = simplejson.dumps(data)
             memcache.add('frontpage_userlist', frontpage_userlist, 30)
 
         self.response.out.write(frontpage_userlist)
 
 #FIXME: To sanitize
-class LookupHandler(webapp.RequestHandler):
+class KeyLookupHandler(webapp.RequestHandler):
     def get(self, handle=None):
         if handle is None:
             return
 
-        cached = memcache.get('lookup_'+handle)
+        account_key = memcache.get('lookup_'+handle)
+        self.response.headers.add_header('Content-Type', 'application/json')
 
-        if cached is not None:
-            m256.output_template(self, 'templates/map.tmpl', {'account_key': cached})
-            return
+        if account_key is None:
 
-        q1 = FoursquareAccount.all()
-        q1.filter('twitter_username =', str(handle))
+            q1 = FoursquareAccount.all()
+            q1.filter('twitter_username =', str(handle))
 
-        if q1.count() == 1:
-            f_account = q1.get()
-            key = f_account.account.key()
-            m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
-            memcache.add('lookup_'+handle, key, 5)
-            return
+            if q1.count() == 1:
+                f_account = q1.get()
+                account_key = simplejson.dumps({'account_key': str(f_account.account.key())})
+                memcache.add('lookup_'+handle, account_key, 5)
+                self.response.out.write(account_key)
+                return
 
-        q2 = FoursquareAccount.all()
-        q2.filter('foursquare_id =', str(handle))
+            q2 = FoursquareAccount.all()
+            q2.filter('foursquare_id =', str(handle))
 
-        if q2.count() == 1:
-            f_account = q2.get()
-            key = f_account.account.key()
-            m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
-            memcache.add('lookup_'+handle, key, 5)
-            return
+            if q2.count() == 1:
+                f_account = q2.get()
+                account_key = simplejson.dumps({'account_key': str(f_account.account.key())})
+                memcache.add('lookup_'+handle, account_key, 5)
+                self.response.out.write(account_key)
+                return
 
-        q3 = TwitterAccount.all()
-        q3.filter('screen_name =', str(handle))
+            q3 = TwitterAccount.all()
+            q3.filter('screen_name =', str(handle))
 
-        if q3.count() == 1:
-            t_account = q3.get()
-            key = t_account.account.key()
-            m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
-            memcache.add('lookup_'+handle, key, 5)
-            return
+            if q3.count() == 1:
+                t_account = q3.get()
+                account_key = simplejson.dumps({'account_key': str(t_account.account.key())})
+                memcache.add('lookup_'+handle, account_key, 5)
+                self.response.out.write(account_key)
+                return
 
-        q4 = TwitterAccount.all()
-        q4.filter('twitter_id =', str(handle))
+            q4 = TwitterAccount.all()
+            q4.filter('twitter_id =', str(handle))
 
-        if q4.count() == 1:
-            t_account = q4.get()
-            key = t_account.account.key()
-            m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
-            memcache.add('lookup_'+handle, key, 5)
-            return
+            if q4.count() == 1:
+                t_account = q4.get()
+                account_key = simplejson.dumps({'account_key': str(t_account.account.key())})
+                memcache.add('lookup_'+handle, account_key, 5)
+                self.response.out.write(account_key)
+                return
 
-        q5 = FlickrAccount.all()
-        q5.filter('nsid =', urllib.unquote(handle))
+            q5 = FlickrAccount.all()
+            q5.filter('nsid =', urllib.unquote(handle))
 
-        if q5.count() == 1:
-            fl_account = q5.get()
-            key = fl_account.account.key()
-            m256.output_template(self, 'templates/map.tmpl', {'account_key': key})
-            memcache.add('lookup_'+handle, key, 5)
-            return
+            if q5.count() == 1:
+                fl_account = q5.get()
+                account_key = simplejson.dumps({'account_key': str(fl_account.account.key())})
+                memcache.add('lookup_'+handle, account_key, 5)
+                self.response.out.write(account_key)
+                return
 
-        self.response.out.write('Sorry, but I cant find a matching user')
+        self.response.out.write(account_key)
+
+#FIXME: To sanitize
+class LookupHandler(webapp.RequestHandler):
+    def get(self, handle=None):
+        m256.output_template(self, 'templates/map.tmpl', {})
 
 #FIXME: To sanitize
 class ScoreboardHandler(webapp.RequestHandler):
@@ -215,7 +222,7 @@ class DataHandler(webapp.RequestHandler):
 
             #FIXME: Putting a cap here, so that results dont take excessive time to return
             #Will likely implement GAE Datastore cursors
-            r1 = q1.fetch(250)
+            r1 = q1.fetch(50)
 
             for checkin in r1:
                 info = {}
@@ -731,7 +738,8 @@ def main():
         ('/data/(.*)', DataHandler),
         ('/t/(.*)', LookupHandler),
         ('/fl/(.*)', LookupHandler),
-        ('/f/(.*)', LookupHandler)
+        ('/f/(.*)', LookupHandler),
+        ('/kl/(.*)', KeyLookupHandler)
     ]
 
     application = webapp.WSGIApplication(routes, debug=True)
