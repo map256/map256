@@ -29,6 +29,32 @@ function convertToRGB (hex) {
 	return color;
 }
 
+function getUrlVars(url) {
+    var vars = [], hash;
+    var hashes = url.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+
+function isArray(a) {
+    return Object.prototype.toString.apply(a) === '[object Array]';
+}
+
+$.extend({URLEncode:function(c){var o='';var x=0;c=c.toString();var r=/(^[a-zA-Z0-9_.]*)/;
+  while(x<c.length){var m=r.exec(c.substr(x));
+    if(m!=null && m.length>1 && m[1]!=''){o+=m[1];x+=m[1].length;
+    }else{if(c[x]==' ')o+='+';else{var d=c.charCodeAt(x);var h=d.toString(16);
+    o+='%'+(h.length<2?'0':'')+h.toUpperCase();}x++;}}return o;},
+URLDecode:function(s){var o=s;var binVal,t;var r=/(%[^%]{2})/;
+  while((m=r.exec(o))!=null && m.length>1 && m[1]!=''){b=parseInt(m[1].substr(1),16);
+  t=String.fromCharCode(b);o=o.replace(m[1],t);}return o;}
+});
+
 function toggle_gradient() {
 	var start_col = convertToRGB('#FF0000');
 	var end_col = convertToRGB('#0000FF');
@@ -178,28 +204,38 @@ function add_infowindows_to_user(user_key, infowindow_data) {
 function add_front_page_data(retrieved_data) {
     for (var key in retrieved_data) {
         user = retrieved_data[key];
-        $.getJSON('/data/'+user['account_key'], function(data) {
-            //FIXME: Need to check to see if data[0] exists
-            add_user_to_map(user['account_key'], data, '#FF0000');
+        var info = new Object();
+        info['account_key'] = user['account_key'];
+        info['url'] = user['url'];
+        info['name'] = user['name'];
+        $.getJSON('/data/'+user['account_key'], info, function(data) {
+            if (isArray(data)) {
+                if (data.length < 1) {
+                    return;
+                }
+            }
+
+            local = getUrlVars(this.data);
+            add_user_to_map(local['account_key'], data, '#FF0000');
             marker_data = new Array();
             marker_dict = new Object();
             marker_dict['location'] = data[0]['location'];
-            marker_dict['title'] = user['url'];
+            marker_dict['title'] = local['name'];
             marker_data[0] = marker_dict;
-            add_markers_to_user(user['account_key'], marker_data);
+            add_markers_to_user(local['account_key'], marker_data);
             infowindow_data = new Array();
             infowindow_dict = new Object();
-            infowindow_dict['content'] = '<h4><a href=\"'+user['url']+'\">'+user['name']+'</a></h4>';
+            infowindow_dict['content'] = '<h4><a href=\"'+$.URLDecode(local['url'])+'\">'+local['name']+'</a></h4>';
             infowindow_data[0] = infowindow_dict;
-            add_infowindows_to_user(user['account_key'], infowindow_data);
-            createMarker(users[user['account_key']]['markers'][0], users[user['account_key']]['infowindows'][0]);
-            users[user['account_key']]['markers'][0].setVisible(true);
+            add_infowindows_to_user(local['account_key'], infowindow_data);
+            createMarker(users[local['account_key']]['markers'][0], users[local['account_key']]['infowindows'][0]);
+            users[local['account_key']]['markers'][0].setVisible(true);
         });
     }
 }
 
 function add_user_page_data(retrieved_data) {
-    add_user_to_map('huh', retrieved_data, '#FF0000');
+    add_user_to_map('huh', retrieved_data, '#000000');
     marker_data = new Array();
     infowindow_data = new Array();
     for (var key in retrieved_data) {
