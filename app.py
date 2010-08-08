@@ -293,8 +293,7 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
         q1.filter('request_key = ', arg)
 
         if q1.count() < 1:
-            #FIXME: Should be self.redirect('/foursquare_authorization')
-            raise Exception('Invalid request (key does not exist)')
+            self.redirect('/foursquare_authorization')
 
         req = q1.get()
 
@@ -516,8 +515,7 @@ class TwitterCallbackHandler(webapp.RequestHandler):
         q1.filter('request_key = ', arg)
 
         if q1.count() < 1:
-            #FIXME: Should be self.redirect('/foursquare_authorization')
-            raise Exception('Invalid request (key does not exist)')
+            self.redirect('/twitter_authorization')
 
         req = q1.get()
 
