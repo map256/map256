@@ -33,6 +33,11 @@ indexes:
 - kind: Checkin
   properties:
   - name: class
+  - name: occurred
+
+- kind: Checkin
+  properties:
+  - name: class
   - name: owner
   - name: checkin_id
     direction: desc

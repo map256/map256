@@ -719,6 +719,54 @@ class AccountDeleteHandler(webapp.RequestHandler):
         taskqueue.add(url='/worker_account_delete', params={'account_key': account.key()})
         m256.output_template(self, 'templates/account_deleted.tmpl', {'page_title': 'Account Deleted', 'page_header': 'Account Deleted'})
 
+class AdminHandler(webapp.RequestHandler):
+    def get(self):
+        info = {}
+        info['page_title'] = 'Admin'
+        info['page_header'] = 'Admin Stats'
+
+        start_date = datetime.datetime.now()
+        delta = datetime.timedelta(days=1)
+        start_date = start_date - delta
+
+        q1 = Account.all()
+        info['accounts_count'] = q1.count()
+
+        q2 = Checkin.all()
+        info['checkins_count'] = q2.count()
+
+        q3 = ServiceAccount.all()
+        info['service_accounts_count'] = q3.count()
+
+        q4 = FoursquareAccount.all()
+        info['foursquare_account_count'] = q4.count()
+
+        q5 = FoursquareCheckin.all()
+        info['foursquare_checkin_count'] = q5.count()
+
+        q6 = TwitterAccount.all()
+        info['twitter_account_count'] = q6.count()
+
+        q7 = TwitterCheckin.all()
+        info['twitter_checkin_count'] = q7.count()
+
+        q8 = FlickrAccount.all()
+        info['flickr_account_count'] = q8.count()
+
+        q9 = FlickrCheckin.all()
+        info['flickr_checkin_count'] = q9.count()
+
+        q5.filter('occurred >=', start_date)
+        info['foursquare_last24hour'] = q5.count()
+
+        q7.filter('occurred >=', start_date)
+        info['twitter_last24hour'] = q7.count()
+
+        q9.filter('occurred >=', start_date)
+        info['flickr_last24hour'] = q9.count()
+
+        m256.output_template(self, 'templates/admin.tmpl', info)
+
 def main():
 
     routes = [
@@ -741,7 +789,8 @@ def main():
         ('/t/(.*)', LookupHandler),
         ('/fl/(.*)', LookupHandler),
         ('/f/(.*)', LookupHandler),
-        ('/kl/(.*)', KeyLookupHandler)
+        ('/kl/(.*)', KeyLookupHandler),
+        ('/admin', AdminHandler)
     ]
 
     application = webapp.WSGIApplication(routes, debug=True)

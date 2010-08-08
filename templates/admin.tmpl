@@ -1,0 +1,35 @@
+{% extends "base.tmpl" %}
+
+{% block content %}
+        <h2>Overall:</h2>
+        <ul>
+            <li>Accounts: {{ accounts_count }}</li>
+            <li>Service Accounts: {{ service_accounts_count }}</li>
+            <li>Checkins: {{ checkins_count }}</li>
+        </ul>
+
+        <h2>Last 24 hours:</h2>
+        <ul>
+            <li>Foursquare: {{ foursquare_last24hour }}</li>
+            <li>Twitter: {{ twitter_last24hour }}</li>
+            <li>Flickr: {{ flickr_last24hour }}</li>
+        </ul>
+
+        <h2>Foursquare:</h2>
+        <ul>
+            <li>Accounts: {{ foursquare_account_count }}</li>
+            <li>Checkins: {{ foursquare_checkin_count }}</li>
+        </ul>
+
+        <h2>Twitter:</h2>
+        <ul>
+            <li>Accounts: {{ twitter_account_count }}</li>
+            <li>Checkins: {{ twitter_checkin_count }}</li>
+        </ul>
+
+        <h2>Flickr:</h2>
+        <ul>
+            <li>Accounts: {{ flickr_account_count }}</li>
+            <li>Checkins: {{ flickr_checkin_count }}</li>
+        </ul>
+{% endblock %}

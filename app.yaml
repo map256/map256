@@ -15,6 +15,10 @@ handlers:
 - url: /faq
   script: app.py
 
+- url: /admin
+  script: app.py
+  login: admin
+
 - url: /front_page_data
   script: app.py
 
