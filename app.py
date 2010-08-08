@@ -63,27 +63,30 @@ class FrontPageDataHandler(webapp.RequestHandler):
             data = []
             q1 = Checkin.all()
             q1.order('-occurred')
-            r1 = q1.fetch(50)
+            r1 = q1.fetch(100)
 
             for res1 in r1:
                 for item in data:
                     if item['account_key'] == str(res1.account_owner.key()):
                         break
                 else:
-                    #FIXME: This needs to go away when we switch everything to ServiceAccounts
                     if isinstance(res1.owner, FoursquareAccount):
                         if res1.owner.twitter_username:
-                            data.append({'account_key': str(res1.account_owner.key()), 'url': '/t/'+res1.owner.twitter_username, 'name': res1.owner.twitter_username})
+                            data.append({'account_key': str(res1.account_owner.key()),
+                                         'url': '/t/'+res1.owner.twitter_username,
+                                         'name': res1.owner.twitter_username})
                         else:
-                            data.append({'account_key': str(res1.account_owner.key()), 'url': '/f/'+res1.owner.foursquare_id, 'name': res1.owner.foursquare_id})
+                            data.append({'account_key': str(res1.account_owner.key()),
+                                         'url': '/f/'+res1.owner.foursquare_id,
+                                         'name': res1.owner.foursquare_id})
 
                     if isinstance(res1.owner, TwitterAccount):
-                        data.append({'account_key': str(res1.account_owner.key()), 'url': '/t/'+res1.owner.screen_name, 'name': res1.owner.screen_name})
+                        data.append({'account_key': str(res1.account_owner.key()),
+                                     'url': '/t/'+res1.owner.screen_name,
+                                     'name': res1.owner.screen_name})
 
                     if isinstance(res1.owner, FlickrAccount):
                         pass
-
-                    #FIXME: Should have a hop-out at 10 or so here
 
             frontpage_userlist = simplejson.dumps(data)
             memcache.add('frontpage_userlist', frontpage_userlist, 30)
@@ -153,12 +156,10 @@ class KeyLookupHandler(webapp.RequestHandler):
 
         self.response.out.write(account_key)
 
-#FIXME: To sanitize
 class LookupHandler(webapp.RequestHandler):
     def get(self, handle=None):
         m256.output_template(self, 'templates/map.tmpl', {})
 
-#FIXME: To sanitize
 class ScoreboardHandler(webapp.RequestHandler):
     def get(self):
         periods = ('week', 'month', 'alltime')
@@ -167,10 +168,10 @@ class ScoreboardHandler(webapp.RequestHandler):
 
         for kind in kinds:
             for period in periods:
-                q = GeneratedStatistic.all()
-                q.filter('description =', kind + '_' + period)
-                q.order('-created')
-                r = q.get()
+                q1 = GeneratedStatistic.all()
+                q1.filter('description =', kind + '_' + period)
+                q1.order('-created')
+                r = q1.get()
                 template_values[kind + '_' + period] = simplejson.loads(r.contents)
 
         m256.output_template(self, 'templates/scoreboard.tmpl', template_values)
