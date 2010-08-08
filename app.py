@@ -84,6 +84,8 @@ class FrontPageDataHandler(webapp.RequestHandler):
                     if isinstance(res1.owner, FlickrAccount):
                         pass
 
+                    #FIXME: Should have a hop-out at 10 or so here
+
             frontpage_userlist = simplejson.dumps(data)
             memcache.add('frontpage_userlist', frontpage_userlist, 30)
 

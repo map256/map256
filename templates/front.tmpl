@@ -16,9 +16,9 @@
             <h1 id="front_title">
                 <a href="/">Map256</a>
 {% if logged_in %}
-                <span id="front_submenu">(<a href="/faq">FAQ</a>, <a href="/profile">profile</a>, <a href="{{ signout_url }}">sign out</a>)</span>
+                <span id="front_submenu">(<a href="/faq">FAQ</a>, <a href="/profile">profile</a>, <a href="{{ signout_url }}">sign out</a>) <img id="ajaxBusy" src="/static/loading.gif" width="32" height="32" /></span>
 {% else %}
-                <span id="front_submenu">(<a href="/faq">FAQ</a>)</span>
+                <span id="front_submenu">(<a href="/faq">FAQ</a>) <img id="ajaxBusy" src="/static/loading.gif" width="32" height="32" /></span>
 {% endif %}
             </h1>
 {% if not logged_in %}

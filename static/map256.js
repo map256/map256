@@ -333,3 +333,9 @@ function initialize_page () {
         change_page_type('userpage');
     }
 }
+
+$(document).ajaxStart(function(){
+    $('#ajaxBusy').show();
+}).ajaxStop(function(){
+    $('#ajaxBusy').hide();
+});
