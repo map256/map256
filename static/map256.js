@@ -3,6 +3,12 @@ var users = new Object();
 var marker_position = 0;
 var markers_visible = false;
 var gradient_visible = false;
+var random_colors = new Array();
+random_colors[0] = '#556270';
+random_colors[1] = '#4ECDC4';
+random_colors[2] = '#C7F464';
+random_colors[4] = '#FF6B6B';
+random_colors[5] = '#C44D58';
 
 function hex (c) {
 	var s = "0123456789abcdef";
@@ -208,6 +214,7 @@ function add_front_page_data(retrieved_data) {
         info['account_key'] = user['account_key'];
         info['url'] = user['url'];
         info['name'] = user['name'];
+        info['color'] = random_colors[key % random_colors.length];
         $.getJSON('/data/'+user['account_key'], info, function(data) {
             if (isArray(data)) {
                 if (data.length < 1) {
@@ -216,7 +223,7 @@ function add_front_page_data(retrieved_data) {
             }
 
             local = getUrlVars(this.data);
-            add_user_to_map(local['account_key'], data, '#FF0000');
+            add_user_to_map(local['account_key'], data, $.URLDecode(local['color']));
             marker_data = new Array();
             marker_dict = new Object();
             marker_dict['location'] = data[0]['location'];
