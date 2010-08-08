@@ -15,10 +15,6 @@ handlers:
 - url: /faq
   script: app.py
 
-- url: /admin
-  script: app.py
-  login: admin
-
 - url: /front_page_data
   script: app.py
 
@@ -79,6 +75,12 @@ handlers:
 - url: /flickr_callback
   script: app.py
   login: required
+
+############### ADMIN TOOLS #################
+
+- url: /admin/(.*)
+  script: admin.py
+  login: admin
 
 ############### QUEUE WORKERS #################
 
