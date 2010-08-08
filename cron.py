@@ -37,7 +37,7 @@ from models import *
 class FoursquareHistoryDispatcher(webapp.RequestHandler):
     def get(self):
         q1 = FoursquareAccount.all()
-        q1.filter('foursquare_disabled = ', False)
+        q1.filter('disabled = ', False)
 
         for user in q1:
             params = {}

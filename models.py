@@ -40,14 +40,10 @@ class GeneratedStatistic(db.Model):
     description = db.StringProperty()
     contents = db.TextProperty() #JSON encoded values
 
-class FoursquareAccount(db.Model):
-    access_key = db.StringProperty()
-    access_secret = db.StringProperty()
-    twitter_username = db.StringProperty()
-    foursquare_id = db.StringProperty()
-    created = db.DateTimeProperty(auto_now_add=True)
-    foursquare_disabled = db.BooleanProperty(default=False)
+class ServiceAccount(polymodel.PolyModel):
     account = db.ReferenceProperty(Account)
+    created = db.DateTimeProperty(auto_now_add=True)
+    disabled = db.BooleanProperty(default=False)
     hide_last_values = db.BooleanProperty(default=False)
 
 class Checkin(polymodel.PolyModel):
@@ -60,38 +56,34 @@ class Checkin(polymodel.PolyModel):
     previous_checkin = db.SelfReferenceProperty()
     account_owner = db.ReferenceProperty(Account)
 
-class FoursquareCheckin(Checkin):
-    owner = db.ReferenceProperty(FoursquareAccount)
-    checkin_id = db.StringProperty()
-    foursquare_id = db.StringProperty()
-
-class TwitterAccount(db.Model):
-    access_key = db.StringProperty()
-    access_secret = db.StringProperty()
-    screen_name = db.StringProperty()
-    twitter_id = db.StringProperty()
-    created = db.DateTimeProperty(auto_now_add=True)
-    disabled = db.BooleanProperty(default=False)
-    account = db.ReferenceProperty(Account)
-    hide_last_values = db.BooleanProperty(default=False)
-    most_recent_tweet_id = db.StringProperty()
-
-class TwitterCheckin(Checkin):
-    owner = db.ReferenceProperty(TwitterAccount)
-    tweet_id = db.StringProperty()
-
-class ServiceAccount(polymodel.PolyModel):
-    account = db.ReferenceProperty(Account)
-    created = db.DateTimeProperty(auto_now_add=True)
-    disabled = db.BooleanProperty(default=False)
-    hide_last_values = db.BooleanProperty(default=False)
-
 class FlickrAccount(ServiceAccount):
     auth_token = db.StringProperty()
     username = db.StringProperty()
     nsid = db.StringProperty()
 
+class TwitterAccount(ServiceAccount):
+    access_key = db.StringProperty()
+    access_secret = db.StringProperty()
+    screen_name = db.StringProperty()
+    twitter_id = db.StringProperty()
+    most_recent_tweet_id = db.StringProperty()
+
+class FoursquareAccount(ServiceAccount):
+    access_key = db.StringProperty()
+    access_secret = db.StringProperty()
+    twitter_username = db.StringProperty()
+    foursquare_id = db.StringProperty()
+
 class FlickrCheckin(Checkin):
     owner = db.ReferenceProperty(FlickrAccount)
     photo_id = db.StringProperty()
     photo_url = db.LinkProperty()
+
+class TwitterCheckin(Checkin):
+    owner = db.ReferenceProperty(TwitterAccount)
+    tweet_id = db.StringProperty()
+
+class FoursquareCheckin(Checkin):
+    owner = db.ReferenceProperty(FoursquareAccount)
+    checkin_id = db.StringProperty()
+    foursquare_id = db.StringProperty()
