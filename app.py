@@ -361,34 +361,6 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
         m256.output_template(self, 'templates/callback.tmpl', {'map_url': url, 'page_title': 'Authorization Completed', 'page_header': 'Authorization Completed'})
         m256.notify_admin("New Foursquare account added: http://www.map256.com/f/%s" % new_account.foursquare_id)
 
-class FoursquareAccountDeleteHandler(webapp.RequestHandler):
-    def get(self):
-        fsq_id = str(self.request.get('fsq_id'))
-        u_acc = m256.get_user_model()
-
-        q1 = FoursquareAccount.all()
-        q1.filter('foursquare_id =', fsq_id)
-        q1.filter('account =', u_acc)
-
-        if q1.count() != 0:
-            #FIXME: Uh, filtering on a single property here.  50?
-            r1 = q1.fetch(50)
-
-            for fsq_account in r1:
-                q2 = FoursquareCheckin.all(keys_only=True)
-                q2.filter('owner =', fsq_account)
-
-                try:
-                    db.delete(q2.fetch(1000)) #FIXME: Won't delete all
-                    fsq_account.delete()
-                except CapabilityDisabledError:
-                    m256.output_maintenance(self)
-                    return
-
-            m256.output_template(self, 'templates/account_deleted.tmpl', {'page_title': 'Account Deleted', 'page_header': 'Account Deleted'})
-        else:
-            self.redirect('/profile')
-
 class AccountHideToggle(webapp.RequestHandler):
     def get(self):
         acc_type = str(self.request.get('acc_type'))
@@ -584,29 +556,6 @@ class TwitterCallbackHandler(webapp.RequestHandler):
         url = '/t/'+new_account.screen_name
         m256.output_template(self, 'templates/callback.tmpl', {'map_url': url, 'page_title': 'Authorization Completed', 'page_header': 'Authorization Completed'})
         m256.notify_admin("New Twitter account added: http://www.map256.com/t/%s" % new_account.screen_name)
-
-class TwitterAccountDeleteHandler(webapp.RequestHandler):
-    def get(self):
-        twitter_id = str(self.request.get('twitter_id'))
-        u_acc = m256.get_user_model()
-
-        q1 = TwitterAccount.all()
-        q1.filter('twitter_id =', twitter_id)
-        q1.filter('account =', u_acc)
-
-        if q1.count() != 0:
-            #FIXME: Uh, filtering on a single property here.  50?
-            r1 = q1.fetch(50)
-
-            for twitter_account in r1:
-                q2 = TwitterCheckin.all(keys_only=True)
-                q2.filter('owner =', twitter_account)
-                db.delete(q2.fetch(1000)) #FIXME: Won't delete all
-                twitter_account.delete()
-
-            m256.output_template(self, 'templates/account_deleted.tmpl', {'page_title': 'Account Deleted', 'page_header': 'Account Deleted'})
-        else:
-            self.redirect('/profile')
 
 class FaqHandler(webapp.RequestHandler):
     def get(self):
