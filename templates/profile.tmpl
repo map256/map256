@@ -12,9 +12,9 @@
 			<li><a href="/f/{{ foursquare_account.foursquare_id}}">{{ foursquare_account.foursquare_id}}</a>
 {% endif %}
 {% if foursquare_account.hide_last_values %}
-			(<a href="/account_hide_toggle?acc_type=fsq&amp;fsq_id={{ foursquare_account.foursquare_id }}">show last 24hrs</a>)
+			(<a href="/profile/account_hide?account_key={{ foursquare_account.key }}">show last 24hrs</a>)
 {% else %}
-			(<a href="/account_hide_toggle?acc_type=fsq&amp;fsq_id={{ foursquare_account.foursquare_id }}">hide last 24hrs</a>)
+			(<a href="/profile/account_hide?account_key={{ foursquare_account.key }}">hide last 24hrs</a>)
 {% endif %}
 			(<a href="/profile/account_delete?account_key={{ foursquare_account.key }}">delete</a>)</li>
 {% endfor %}
@@ -27,9 +27,9 @@
 			<li>
 				<a href="/t/{{ twitter_account.screen_name }}">{{ twitter_account.screen_name }}</a>
 {% if twitter_account.hide_last_values %}
-						(<a href="/account_hide_toggle?acc_type=twitter&amp;twit_id={{ twitter_account.twitter_id }}">show last 24hrs</a>)
+						(<a href="/profile/account_hide?account_key={{ twitter_account.key }}">show last 24hrs</a>)
 {% else %}
-						(<a href="/account_hide_toggle?acc_type=twitter&amp;twit_id={{ twitter_account.twitter_id }}">hide last 24hrs</a>)
+						(<a href="/profile/account_hide?account_key={{ twitter_account.key }}">hide last 24hrs</a>)
 {% endif %}
 			    (<a href="/profile/account_delete?account_key={{ twitter_account.key }}">delete</a>)
 			</li>
@@ -43,9 +43,9 @@
 			<li>
 				<a href="/fl/{{ flickr_account.nsid }}">{{ flickr_account.nsid }}</a>
 {% if flickr_account.hide_last_values %}
-						(<a href="/account_hide_toggle?acc_type=flickr&amp;flickr_id={{ flickr_account.nsid }}">show last 24hrs</a>)
+						(<a href="/profile/account_hide?account_key={{ flickr_account.key }}">show last 24hrs</a>)
 {% else %}
-						(<a href="/account_hide_toggle?acc_type=flickr&amp;flickr_id={{ flickr_account.nsid }}">hide last 24hrs</a>)
+						(<a href="/profile/account_hide?account_key={{ flickr_account.key }}">hide last 24hrs</a>)
 {% endif %}
                 (<a href="/profile/account_delete?account_key={{ flickr_account.key }}">delete</a>)
 			</li>

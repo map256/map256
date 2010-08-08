@@ -360,93 +360,37 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
         m256.output_template(self, 'templates/callback.tmpl', {'map_url': url, 'page_title': 'Authorization Completed', 'page_header': 'Authorization Completed'})
         m256.notify_admin("New Foursquare account added: http://www.map256.com/f/%s" % new_account.foursquare_id)
 
-class AccountHideToggle(webapp.RequestHandler):
+class AccountHideHandler(webapp.RequestHandler):
     def get(self):
-        acc_type = str(self.request.get('acc_type'))
+        account_key = self.request.get('account_key')
 
-        if acc_type == 'fsq':
-            fsq_id = str(self.request.get('fsq_id'))
-            u_acc = m256.get_user_model()
-
-            q1 = FoursquareAccount.all()
-            q1.filter('foursquare_id =', fsq_id)
-            q1.filter('account =', u_acc)
-
-            if q1.count() != 0:
-                fsq_account = q1.get()
-
-                if fsq_account.hide_last_values:
-                    fsq_account.hide_last_values = False
-                else:
-                    #FIXME: Should try to invalidate all memcache entries associated with this
-                    fsq_account.hide_last_values = True
-
-                try:
-                    fsq_account.put()
-                except CapabilityDisabledError:
-                    m256.output_maintenance(self)
-                    return
-
-                self.redirect('/profile')
-            else:
-                self.redirect('/profile')
-
-        elif acc_type == 'twitter':
-            twit_id = str(self.request.get('twit_id'))
-            u_acc = m256.get_user_model()
-
-            q1 = TwitterAccount.all()
-            q1.filter('twitter_id =', twit_id)
-            q1.filter('account =', u_acc)
-
-            if q1.count() != 0:
-                twit_account = q1.get()
-
-                if twit_account.hide_last_values:
-                    twit_account.hide_last_values = False
-                else:
-                    #FIXME: Should try to invalidate all memcache entries associated with this
-                    twit_account.hide_last_values = True
-
-                try:
-                    twit_account.put()
-                except CapabilityDisabledError:
-                    m256.output_maintenance(self)
-                    return
-
-                self.redirect('/profile')
-            else:
-                self.redirect('/profile')
-
-        elif acc_type == 'flickr':
-            flickr_id = urllib.unquote(self.request.get('flickr_id'))
-            u_acc = m256.get_user_model()
-
-            q1 = FlickrAccount.all()
-            q1.filter('nsid =', flickr_id)
-            q1.filter('account =', u_acc)
-
-            if q1.count() != 0:
-                flickr_account = q1.get()
-
-                if flickr_account.hide_last_values:
-                    flickr_account.hide_last_values = False
-                else:
-                    #FIXME: Should try to invalidate all memcache entries associated with this
-                    flickr_account.hide_last_values = True
-
-                try:
-                    flickr_account.put()
-                except CapabilityDisabledError:
-                    m256.output_maintenance(self)
-                    return
-
-                self.redirect('/profile')
-            else:
-                self.redirect('/profile')
-
-        else:
+        if account_key is None:
             self.redirect('/profile')
+
+        try:
+            k1 = db.Key(account_key)
+        except:
+            self.redirect('/profile')
+
+        account = ServiceAccount.get(k1)
+
+        if account is None:
+            self.redirect('/profile')
+
+        u_acc = m256.get_user_model()
+
+        if account.account != u_acc:
+            self.redirect('/profile')
+
+        if account.hide_last_values:
+            account.hide_last_values = False
+        else:
+            #FIXME: Should try to invalidate all memcache entries associated with this
+            memcache.delete('checkindata_'+str(account.account.key))
+            account.hide_last_values = True
+
+        account.put()
+        self.redirect('/profile')
 
 class TwitterAuthorizationHandler(webapp.RequestHandler):
     def get(self):
@@ -673,7 +617,6 @@ def main():
         ('/scoreboard', ScoreboardHandler),
         ('/profile', ProfileHandler),
         ('/front_page_data', FrontPageDataHandler),
-        ('/account_hide_toggle', AccountHideToggle),
         ('/foursquare_authorization', FoursquareAuthorizationHandler),
         ('/foursquare_callback', FoursquareCallbackHandler),
         ('/twitter_authorization', TwitterAuthorizationHandler),
@@ -681,6 +624,7 @@ def main():
         ('/flickr_authorization', FlickrAuthorizationHandler),
         ('/flickr_callback', FlickrCallbackHandler),
         ('/profile/account_delete', AccountDeleteHandler),
+        ('/profile/account_hide', AccountHideHandler),
         ('/data/(.*)', DataHandler),
         ('/t/(.*)', LookupHandler),
         ('/fl/(.*)', LookupHandler),
