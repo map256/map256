@@ -179,9 +179,9 @@ def downloaderror_check():
     recent = memcache.get('urlfetch_count')
 
     if recent > 5:
-        return true
+        return True
     else:
-        return false
+        return False
 
 def downloaderror_update():
     recent = memcache.get('urlfetch_count')

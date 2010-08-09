@@ -75,6 +75,7 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
         logging.info('Using request URL: %s' % request_url)
 
         if m256.downloaderror_check():
+            logging.info('download error too high, aborting foursquare request')
             return
 
         try:
@@ -96,6 +97,7 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 
         if 'checkins' not in history:
             m256.notify_admin('Malformed response from Foursquare (%s)' % content)
+            m256.downloaderror_update()
             return
 
         checkins = history['checkins']
@@ -172,6 +174,7 @@ class FlickrHistoryWorker(webapp.RequestHandler):
             url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&per_page=50&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc'
 
         if m256.downloaderror_check():
+            logging.info('download error too high, aborting Flickr request')
             return
 
         try:
@@ -285,6 +288,7 @@ class TwitterHistoryWorker(webapp.RequestHandler):
         logging.info('Using request URL: %s' % request_url)
 
         if m256.downloaderror_check():
+            logging.info('download error too high, aborting Twitter request')
             return
 
         try:
