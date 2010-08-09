@@ -284,7 +284,7 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 
         logging.info('Using request URL: %s' % request_url)
 
-        if m256.downloaderror_check()
+        if m256.downloaderror_check():
             return
 
         try:
