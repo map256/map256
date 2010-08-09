@@ -178,13 +178,21 @@ def output_maintenance(app):
 def downloaderror_check():
     recent = memcache.get('urlfetch_count')
 
+    if recent > 5:
+        return true
+    else:
+        return false
+
+def downloaderror_update():
+    recent = memcache.get('urlfetch_count')
+
     if recent is None:
         memcache.add('urlfetch_count', 1, 150)
     else:
         recent = recent + 1
         memcache.replace('urlfetch_count', recent, 150)
 
-    if recent > 10:
+    if recent > 5:
         notify_admin('High error rate on URL fetches')
 
 #def rate_limit_check(app):

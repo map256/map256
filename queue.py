@@ -74,18 +74,22 @@ class FoursquareHistoryWorker(webapp.RequestHandler):
 
         logging.info('Using request URL: %s' % request_url)
 
+        if m256.downloaderror_check():
+            return
+
         try:
             content = m256.foursquare_token_request(request_url,
                                                     'GET',
                                                     fsq_account.access_key,
                                                     fsq_account.access_secret)
         except urlfetch.DownloadError:
-            m256.downloaderror_check()
+            m256.downloaderror_update()
             return
         except Exception, e:
             errmsg = 'Exception requesting URL (url: %s, msg: %s)' % (request_url, e)
             logging.error(errmsg)
             m256.notify_admin(errmsg)
+            m256.downloaderror_update()
             return
 
         history = simplejson.loads(content)
@@ -167,16 +171,19 @@ class FlickrHistoryWorker(webapp.RequestHandler):
             m.update(flickr_api_secret+'api_key'+flickr_api_key+'auth_token'+flickr_account.auth_token+'extrasdescription,date_taken,url_sq,geoformatjson'+'methodflickr.photos.getWithGeoData'+'per_page50privacy_filter1sortdate-taken-asc')
             url = m256.flickr_base_api_url+'?method=flickr.photos.getWithGeoData&api_key='+flickr_api_key+'&format=json&auth_token='+flickr_account.auth_token+'&api_sig='+m.hexdigest()+'&per_page=50&privacy_filter=1&extras=description,date_taken,url_sq,geo&sort=date-taken-asc'
 
+        if m256.downloaderror_check():
+            return
+
         try:
             result = urlfetch.fetch(url)
         except urlfetch.DownloadError:
             logging.error('Download error on %s' % url)
-            m256.downloaderror_check()
+            m256.downloaderror_update()
             return
 
         if result.status_code != 200:
             logging.error('Status code on %s was %s' % (url, result.status_code))
-            m256.downloaderror_check()
+            m256.downloaderror_update()
             return
 
         #FIXME: Horrible no good very bad way to get rid of JSON header.  Should regex, but Python regexes are ug-ly.
@@ -277,18 +284,22 @@ class TwitterHistoryWorker(webapp.RequestHandler):
 
         logging.info('Using request URL: %s' % request_url)
 
+        if m256.downloaderror_check()
+            return
+
         try:
             content = m256.twitter_token_request(request_url,
                                                  'GET',
                                                  t_acct.access_key,
                                                  t_acct.access_secret)
         except urlfetch.DownloadError:
-            m256.downloaderror_check()
+            m256.downloaderror_update()
             return
         except Exception, e:
             errmsg = 'Exception requesting URL (url: %s, msg: %s)' % (request_url, e)
             logging.error(errmsg)
             m256.notify_admin(errmsg)
+            m256.downloaderror_update()
             return
 
         history = simplejson.loads(content)
