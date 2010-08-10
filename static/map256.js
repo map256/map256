@@ -153,7 +153,14 @@ function goto_next() {
 function setvalue(event, ui) {
 	var valx = $("#slider").slider( "option", "value" );
 	users['huh']['markers'][marker_position].setVisible(false);
-	marker_position = (users['huh']['markers'].length-1) - valx;
+
+    if (valx == users['huh']['markers'].length) {
+        marker_position = 0;
+    } else {
+        marker_position = (users['huh']['markers'].length-1) - valx;
+    }
+
+    console.log(marker_position);
 	users['huh']['markers'][marker_position].setVisible(true);
 	map.setCenter(users['huh']['markers'][marker_position].getPosition());
 }
@@ -176,59 +183,51 @@ function createMarker(marker, infowindow) {
 	});
 }
 
-function add_user_to_map(user_key, point_data, line_color) {
-    if (point_data.length < 1) {
+function add_lines_to_user(user_key, point_data, line_color) {
+    if (point_data.length < 2) {
         return;
     }
 
-    users[user_key] = new Object();
-    var lines = new Array();
-
 	for (var i=1; i<point_data.length; i++) {
-		if (point_data[i-1]['location'] != point_data[i]['location']) {
-			var tmp_a = point_data[i-1]['location'].split(",");
-			var tmp_b = point_data[i]['location'].split(",");
+		var tmp_a = point_data[i-1]['location'].split(",");
+		var tmp_b = point_data[i]['location'].split(",");
 
-			lines.push(new google.maps.Polyline({
-				path: new Array(new google.maps.LatLng(tmp_a[0], tmp_a[1]), new google.maps.LatLng(tmp_b[0], tmp_b[1])),
-				strokeColor: line_color,
-				strokeOpacity: 1.0,
-				strokeWeight: 3,
-				map: map
-			}));
-		}
+		users[user_key]['lines'].push(new google.maps.Polyline({
+			path: new Array(new google.maps.LatLng(tmp_a[0], tmp_a[1]), new google.maps.LatLng(tmp_b[0], tmp_b[1])),
+			strokeColor: line_color,
+			strokeOpacity: 1.0,
+			strokeWeight: 3,
+			map: map
+		}));
 	}
+}
 
-    users[user_key]['lines'] = lines;
+function add_user_to_map(user_key) {
+    users[user_key] = new Object();
+    users[user_key]['lines'] = new Array();
+    users[user_key]['markers'] = new Array();
+    users[user_key]['infowindows'] = new Array();
 }
 
 function add_markers_to_user(user_key, marker_data) {
-    var markers = new Array();
-
     for (var key in marker_data) {
         point = marker_data[key]['location'].split(',');
-        markers.push(new google.maps.Marker({
+        users[user_key]['markers'].push(new google.maps.Marker({
 		    position: new google.maps.LatLng(point[0], point[1]),
 		    map: map,
 		    title: marker_data[key]['title'],
 		    visible: false
 	    }));
     }
-
-    users[user_key]['markers'] = markers;
 }
 
 function add_infowindows_to_user(user_key, infowindow_data) {
-    var infowindows = new Array();
-
     for (var key in infowindow_data) {
-        infowindows.push(new google.maps.InfoWindow({
+        users[user_key]['infowindows'].push(new google.maps.InfoWindow({
 	        content: infowindow_data[key]['content'],
 		    maxWidth: 200
 	    }));
     }
-
-	users[user_key]['infowindows'] = infowindows;
 }
 
 function add_front_page_data(retrieved_data) {
@@ -246,8 +245,23 @@ function add_front_page_data(retrieved_data) {
                 }
             }
 
+            if (data.length == 51) {
+                data.pop();
+            }
+
             local = getUrlVars(this.data);
-            add_user_to_map(local['account_key'], data, $.URLDecode(local['color']));
+            add_user_to_map(local['account_key']);
+
+            line_data = new Array();
+
+            for (var data_key in data) {
+                var line_dict = new Object();
+                line_dict['location'] = data[data_key]['location'];
+                line_data[data_key] = line_dict;
+            }
+
+            add_lines_to_user(local['account_key'], line_data, $.URLDecode(local['color']));
+
             marker_data = new Array();
             marker_dict = new Object();
             marker_dict['location'] = data[0]['location'];
@@ -265,19 +279,80 @@ function add_front_page_data(retrieved_data) {
     }
 }
 
-function add_user_page_data(retrieved_data) {
-    add_user_to_map('huh', retrieved_data, '#000000');
-    marker_data = new Array();
-    infowindow_data = new Array();
+function append_user_page_data(retrieved_data) {
+    if (retrieved_data.length == 51) {
+        var lastitem = retrieved_data.pop();
+    }
+
     for (var key in retrieved_data) {
         var marker_dict = new Object();
         marker_dict['location'] = retrieved_data[key]['location'];
-        marker_dict['title'] = 'foo';
+        marker_dict['title'] = retrieved_data[key]['occurred'];
         var infowindow_dict = new Object();
-        infowindow_dict['content'] = "<p><strong>"+retrieved_data[key]['description']+"</strong><br><em>"+retrieved_data[key]['occurred']+"</em></p>",
+        infowindow_dict['content'] = "<p><strong>"+retrieved_data[key]['description']+"</strong><br><em>"+retrieved_data[key]['occurred']+"</em></p>";
+        var line_dict = new Object();
+        line_dict['location'] = retrieved_data[key]['location'];
+
         marker_data[key] = marker_dict;
         infowindow_data[key] = infowindow_dict;
+        line_data[key] = line_dict;
     }
+
+    current_length = users['huh']['lines'].length;
+    end_of_previous = new Object();
+    start_of_current = new Object();
+    var lat = users['huh']['markers'][current_length].getPosition().lat();
+    var lng = users['huh']['markers'][current_length].getPosition().lng();
+    end_of_previous['location'] = lat+','+lng;
+    start_of_current['location'] = retrieved_data[0]['location'];
+
+    connection_line = new Array();
+    connection_line[0] = end_of_previous;
+    connection_line[1] = start_of_current;
+
+    add_lines_to_user('huh', connection_line, '#000000');
+
+    add_lines_to_user('huh', line_data, '#000000');
+    add_markers_to_user('huh', marker_data);
+    add_infowindows_to_user('huh', infowindow_data);
+
+    for (var key in marker_data) {
+        createMarker(users['huh']['markers'][key], users['huh']['infowindows'][key]);
+    }
+
+    $("#slider").slider("option", "max", users['huh']['markers'].length);
+
+    if (lastitem) {
+        $.getJSON('/data/'+lastitem['key']+'?cursor='+lastitem['cursor'], function(data) { append_user_page_data(data); });
+    }
+}
+
+function add_user_page_data(retrieved_data) {
+    if (retrieved_data.length == 51) {
+        var lastitem = retrieved_data.pop();
+    }
+
+    add_user_to_map('huh');
+
+    marker_data = new Array();
+    infowindow_data = new Array();
+    line_data = new Array();
+
+    for (var key in retrieved_data) {
+        var marker_dict = new Object();
+        marker_dict['location'] = retrieved_data[key]['location'];
+        marker_dict['title'] = retrieved_data[key]['occurred'];
+        var infowindow_dict = new Object();
+        infowindow_dict['content'] = "<p><strong>"+retrieved_data[key]['description']+"</strong><br><em>"+retrieved_data[key]['occurred']+"</em></p>";
+        var line_dict = new Object();
+        line_dict['location'] = retrieved_data[key]['location'];
+
+        marker_data[key] = marker_dict;
+        infowindow_data[key] = infowindow_dict;
+        line_data[key] = line_dict;
+    }
+
+    add_lines_to_user('huh', line_data, '#000000')
     add_markers_to_user('huh', marker_data);
     add_infowindows_to_user('huh', infowindow_data);
 
@@ -291,30 +366,38 @@ function add_user_page_data(retrieved_data) {
 	centerpt = new google.maps.LatLng(tmp[0], tmp[1]);
 	map.setCenter(centerpt);
 
-	var sld_max = retrieved_data.length-1
 	$(document).ready(function() {
-	  $("#slider").slider({ min: 0, max: sld_max, slide: setvalue, value: sld_max });
+	    var sld_max = users['huh']['markers'].length - 1;
+	    $("#slider").slider({ min: 0, max: sld_max, slide: setvalue, value: sld_max });
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_n"), "click", function(ev) {
+	    var sld_max = users['huh']['markers'].length-1;
 		map.setCenter(users['huh']['markers'][marker_position].getPosition());
 		$("#slider").slider( "option", "value", sld_max - marker_position );
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_l"), "click", function(ev) {
+	    var sld_max = users['huh']['markers'].length-1;
 		map.setCenter(users['huh']['markers'][marker_position].getPosition());
 		$("#slider").slider( "option", "value", sld_max - marker_position );
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_p"), "click", function(ev) {
+	    var sld_max = users['huh']['markers'].length-1;
 		map.setCenter(users['huh']['markers'][marker_position].getPosition());
 		$("#slider").slider( "option", "value", sld_max - marker_position );
 	});
 
 	google.maps.event.addDomListener(document.getElementById("g_e"), "click", function(ev) {
+	    var sld_max = users['huh']['markers'].length-1;
 		map.setCenter(users['huh']['markers'][marker_position].getPosition());
 		$("#slider").slider( "option", "value", sld_max - marker_position );
 	});
+
+    if (lastitem) {
+	    $.getJSON('/data/'+lastitem['key']+'?cursor='+lastitem['cursor'], function(data) { append_user_page_data(data); });
+    }
 }
 
 function look_up_user(retrieved_data) {

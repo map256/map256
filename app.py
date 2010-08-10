@@ -202,6 +202,11 @@ class DataHandler(webapp.RequestHandler):
         data = memcache.get('checkindata_'+key)
         self.response.headers.add_header('Content-Type', 'application/json')
 
+        #FIXME: Yes, basically this means that cursord requests arent being cached.  Should fix.
+        cursor = self.request.get('cursor')
+        if cursor is not None:
+            data = None
+
         if data is None:
             data = []
 
@@ -216,14 +221,16 @@ class DataHandler(webapp.RequestHandler):
                 return
 
             q1 = Checkin.all()
+            #FIXME: Need to check to see if account is disabled
             q1.filter('account_owner =', user)
             q1.order('-occurred')
+
+            if cursor is not None:
+                q1.with_cursor(cursor)
 
             if q1.count() == 0:
                 return
 
-            #FIXME: Putting a cap here, so that results dont take excessive time to return
-            #Will likely implement GAE Datastore cursors
             r1 = q1.fetch(50)
 
             for checkin in r1:
@@ -244,6 +251,12 @@ class DataHandler(webapp.RequestHandler):
 
             data.sort(cmp=lambda x,y: cmp(datetime.datetime.strptime(x['occurred'], '%Y-%m-%d %H:%M:%S'),
                                           datetime.datetime.strptime(y['occurred'], '%Y-%m-%d %H:%M:%S')), reverse=True)
+
+            if len(r1) == 50:
+                lastinfo = {}
+                lastinfo['cursor'] = q1.cursor()
+                lastinfo['key'] = key
+                data.append(lastinfo)
 
             encoded = simplejson.dumps(data)
             memcache.add('checkindata_'+key, encoded, 150)
