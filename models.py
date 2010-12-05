@@ -29,6 +29,7 @@ from google.appengine.ext.db import polymodel
 class Account(db.Model):
     google_user = db.UserProperty()
     created = db.DateTimeProperty(auto_now_add=True)
+    nickname = db.StringProperty()
 
 class OauthRequest(db.Model):
     request_key = db.StringProperty()

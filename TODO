@@ -2,15 +2,15 @@
 TODO
 ---
 
-Switch to username addressing:
+Switch to nickname addressing:
 ---
   - DONE Move all appropriate URLs under /profile/*
-  - Add a "username" field to account
+  - DONE Add a "nickname" field to account
+  - Modify create user to assign a random nickname
     - Should have an exclude list ("help", "about", "static", "profile", "data", "faq", "kl", ...?)
-  - Modify create user to assign a random username
-  - Modify profile page to allow username to be updated
-  - Add a "/{$username}" lookup that maps to user display
-  - Modify frontpage data to point to /$username
+  - Modify profile page to allow nickname to be updated
+  - Add a "/{$nickname}" lookup that maps to user display
+  - Modify frontpage data to point to /$nickname
   - Remove /[t,f,fl]/(.*) handlers
 
 Merge all of the pages into a "Single Page App"
@@ -45,6 +45,7 @@ PROMOTION NOTES:
 ---
 
 Must update Foursquare, Flickr, and Twitter on OAuth callback URLs on next public promotion.
+Must add nicknames for existing Accounts
 
 ---
 DONE:
