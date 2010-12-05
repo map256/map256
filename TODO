@@ -7,8 +7,8 @@ Switch to nickname addressing:
   - DONE Move all appropriate URLs under /profile/*
   - DONE Add a "nickname" field to account
   - DONE Modify create user to assign a random nickname
-    - Should have an exclude list ("help", "about", "static", "profile", "data", "faq", "kl", ...?)
-  - Modify profile page to allow nickname to be updated
+  - DONE Modify profile page to allow nickname to be updated
+    - DONE Should have an exclude list ("help", "about", "static", "profile", "data", "faq", "kl", ...?)
   - Add a "/{$nickname}" lookup that maps to user display
   - Modify frontpage data to point to /$nickname
   - Remove /[t,f,fl]/(.*) handlers
@@ -46,6 +46,7 @@ PROMOTION NOTES:
 
 Must update Foursquare, Flickr, and Twitter on OAuth callback URLs on next public promotion.
 Must add nicknames for existing Accounts
+Must have config that includes prohibited nicknames
 
 ---
 DONE:

@@ -177,7 +177,7 @@ class ProfileHandler(webapp.RequestHandler):
         q3.filter('account =', account)
         template_values['flickr_accounts'] = q3.fetch(25)
 
-        template_values['nickname'] = account.google_user.nickname()
+        template_values['nickname'] = account.nickname
 
         m256.output_template(self, 'templates/profile.tmpl', template_values)
 
@@ -291,6 +291,7 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
 
         if q1.count() < 1:
             self.redirect('/profile/foursquare_authorization')
+            return
 
         req = q1.get()
 
@@ -364,21 +365,25 @@ class AccountHideHandler(webapp.RequestHandler):
 
         if account_key is None:
             self.redirect('/profile')
+            return
 
         try:
             k1 = db.Key(account_key)
         except:
             self.redirect('/profile')
+            return
 
         account = ServiceAccount.get(k1)
 
         if account is None:
             self.redirect('/profile')
+            return
 
         u_acc = m256.get_user_model()
 
         if account.account != u_acc:
             self.redirect('/profile')
+            return
 
         if account.hide_last_values:
             account.hide_last_values = False
@@ -429,6 +434,7 @@ class TwitterCallbackHandler(webapp.RequestHandler):
 
         if q1.count() < 1:
             self.redirect('/profile/twitter_authorization')
+            return
 
         req = q1.get()
 
@@ -513,6 +519,7 @@ class FlickrCallbackHandler(webapp.RequestHandler):
 
         if frob is None:
             self.redirect('/profile/flickr_authorization')
+            return
 
         m = md5.new()
         m.update(flickr_api_secret+'api_key'+flickr_api_key+'formatjsonfrob'+frob+'methodflickr.auth.getToken')
@@ -588,24 +595,53 @@ class AccountDeleteHandler(webapp.RequestHandler):
 
         if account_key is None:
             self.redirect('/profile')
+            return
 
         try:
             k1 = db.Key(account_key)
         except:
             self.redirect('/profile')
+            return
 
         account = ServiceAccount.get(k1)
 
         if account is None:
             self.redirect('/profile')
+            return
 
         u_acc = m256.get_user_model()
 
         if account.account != u_acc:
             self.redirect('/profile')
+            return
 
         taskqueue.add(url='/worker_account_delete', params={'account_key': account.key()})
         m256.output_template(self, 'templates/account_deleted.tmpl', {'page_title': 'Account Deleted', 'page_header': 'Account Deleted'})
+
+class UpdateNicknameHandler(webapp.RequestHandler):
+    def get(self):
+        u_acc = m256.get_user_model()
+        
+        new_nickname = self.request.get('new_nickname')
+        
+        if new_nickname is None:
+            self.redirect('/profile')
+            return
+
+        if new_nickname in prohibited_nicknames:
+            self.redirect('/profile')
+            logging.error('user used prohibited nickname')
+            return
+        
+        u_acc.nickname = new_nickname
+        
+        try:
+            u_acc.put()
+        except CapabilityDisabledError:
+            m256.output_maintenance(self)
+            return
+
+        self.redirect('/profile')
 
 def main():
     routes = [
@@ -621,6 +657,7 @@ def main():
         ('/profile/foursquare_callback', FoursquareCallbackHandler),
         ('/profile/twitter_authorization', TwitterAuthorizationHandler),
         ('/profile/twitter_callback', TwitterCallbackHandler),
+        ('/profile/update_nickname', UpdateNicknameHandler),
         ('/data/(.*)', DataHandler),
         ('/t/(.*)', LookupHandler),
         ('/fl/(.*)', LookupHandler),

@@ -1,7 +1,11 @@
 {% extends "base.tmpl" %}
 
 {% block content %}
-		<p>{{ nickname }}</p>
+		<p>Nickname:</p>
+		<form method="get" action="/profile/update_nickname">
+		  <input type="text" name="new_nickname" value="{{ nickname }}" />
+		  <input type="submit" value="Update Nickname" />
+		</form>
 		<hr>
 		<h2>Foursquare Accounts:</h2>
 		<ul>
