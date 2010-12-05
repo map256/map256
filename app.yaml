@@ -37,30 +37,6 @@ handlers:
   script: app.py
   login: required
 
-- url: /foursquare_authorization
-  script: app.py
-  login: required
-
-- url: /foursquare_callback
-  script: app.py
-  login: required
-
-- url: /twitter_authorization
-  script: app.py
-  login: required
-
-- url: /twitter_callback
-  script: app.py
-  login: required
-
-- url: /flickr_authorization
-  script: app.py
-  login: required
-
-- url: /flickr_callback
-  script: app.py
-  login: required
-
 ############### ADMIN TOOLS #################
 
 - url: /admin/(.*)

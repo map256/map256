@@ -1,4 +1,3 @@
 User-agent: *
-Disallow: /foursquare_authorize
-Disallow: /foursquare_callback
 Disallow: /profile
+Disallow: /profile/*

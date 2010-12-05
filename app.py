@@ -290,7 +290,7 @@ class FoursquareCallbackHandler(webapp.RequestHandler):
         q1.filter('request_key = ', arg)
 
         if q1.count() < 1:
-            self.redirect('/foursquare_authorization')
+            self.redirect('/profile/foursquare_authorization')
 
         req = q1.get()
 
@@ -428,7 +428,7 @@ class TwitterCallbackHandler(webapp.RequestHandler):
         q1.filter('request_key = ', arg)
 
         if q1.count() < 1:
-            self.redirect('/twitter_authorization')
+            self.redirect('/profile/twitter_authorization')
 
         req = q1.get()
 
@@ -512,7 +512,7 @@ class FlickrCallbackHandler(webapp.RequestHandler):
         frob = self.request.get('frob')
 
         if frob is None:
-            self.redirect('/flickr_authorization')
+            self.redirect('/profile/flickr_authorization')
 
         m = md5.new()
         m.update(flickr_api_secret+'api_key'+flickr_api_key+'formatjsonfrob'+frob+'methodflickr.auth.getToken')
@@ -608,20 +608,19 @@ class AccountDeleteHandler(webapp.RequestHandler):
         m256.output_template(self, 'templates/account_deleted.tmpl', {'page_title': 'Account Deleted', 'page_header': 'Account Deleted'})
 
 def main():
-
     routes = [
         ('/', FrontHandler),
         ('/faq', FaqHandler),
         ('/profile', ProfileHandler),
         ('/front_page_data', FrontPageDataHandler),
-        ('/foursquare_authorization', FoursquareAuthorizationHandler),
-        ('/foursquare_callback', FoursquareCallbackHandler),
-        ('/twitter_authorization', TwitterAuthorizationHandler),
-        ('/twitter_callback', TwitterCallbackHandler),
-        ('/flickr_authorization', FlickrAuthorizationHandler),
-        ('/flickr_callback', FlickrCallbackHandler),
         ('/profile/account_delete', AccountDeleteHandler),
         ('/profile/account_hide', AccountHideHandler),
+        ('/profile/flickr_authorization', FlickrAuthorizationHandler),
+        ('/profile/flickr_callback', FlickrCallbackHandler),
+        ('/profile/foursquare_authorization', FoursquareAuthorizationHandler),
+        ('/profile/foursquare_callback', FoursquareCallbackHandler),
+        ('/profile/twitter_authorization', TwitterAuthorizationHandler),
+        ('/profile/twitter_callback', TwitterCallbackHandler),
         ('/data/(.*)', DataHandler),
         ('/t/(.*)', LookupHandler),
         ('/fl/(.*)', LookupHandler),

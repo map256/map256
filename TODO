@@ -1,8 +1,14 @@
+---
+TODO
+---
+
 Switch to username addressing:
 ---
-  - Move all appropriate URLs under /profile/*
+  - DONE Move all appropriate URLs under /profile/*
   - Add a "username" field to account
     - Should have an exclude list ("help", "about", "static", "profile", "data", "faq", "kl", ...?)
+  - Modify create user to assign a random username
+  - Modify profile page to allow username to be updated
   - Add a "/{$username}" lookup that maps to user display
   - Modify frontpage data to point to /$username
   - Remove /[t,f,fl]/(.*) handlers
@@ -33,3 +39,15 @@ Add "trips" support:
     - Returns trip ID?
   - Add "list trips" to account page
   - Create "delete trip" page
+
+---
+PROMOTION NOTES:
+---
+
+Must update Foursquare, Flickr, and Twitter on OAuth callback URLs on next public promotion.
+
+---
+DONE:
+---
+
+Pull scoreboard page
