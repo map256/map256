@@ -7,8 +7,6 @@ Switch to username addressing:
   - Modify frontpage data to point to /$username
   - Remove /[t,f,fl]/(.*) handlers
 
-Pull scoreboard
-
 Merge all of the pages into a "Single Page App"
 
 Add Facebook Places support

@@ -33,9 +33,6 @@ handlers:
 - url: /data/(.*)
   script: app.py
 
-- url: /scoreboard
-  script: app.py
-
 - url: /profile(.*)
   script: app.py
   login: required

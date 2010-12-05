@@ -160,22 +160,6 @@ class LookupHandler(webapp.RequestHandler):
     def get(self, handle=None):
         m256.output_template(self, 'templates/map.tmpl', {})
 
-class ScoreboardHandler(webapp.RequestHandler):
-    def get(self):
-        periods = ('week', 'month', 'alltime')
-        kinds = ('checkin_speed', 'distance_traveled', 'number_checkins')
-        template_values = {'page_title': 'Scoreboard', 'page_header': 'Scoreboard'}
-
-        for kind in kinds:
-            for period in periods:
-                q1 = GeneratedStatistic.all()
-                q1.filter('description =', kind + '_' + period)
-                q1.order('-created')
-                r = q1.get()
-                template_values[kind + '_' + period] = simplejson.loads(r.contents)
-
-        m256.output_template(self, 'templates/scoreboard.tmpl', template_values)
-
 class ProfileHandler(webapp.RequestHandler):
     def get(self):
         account = m256.get_user_model()
@@ -628,7 +612,6 @@ def main():
     routes = [
         ('/', FrontHandler),
         ('/faq', FaqHandler),
-        ('/scoreboard', ScoreboardHandler),
         ('/profile', ProfileHandler),
         ('/front_page_data', FrontPageDataHandler),
         ('/foursquare_authorization', FoursquareAuthorizationHandler),
