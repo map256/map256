@@ -1,0 +1,37 @@
+Switch to username addressing:
+---
+  - Move all appropriate URLs under /profile/*
+  - Add a "username" field to account
+    - Should have an exclude list ("help", "about", "static", "profile", "data", "faq", "kl", ...?)
+  - Add a "/{$username}" lookup that maps to user display
+  - Modify frontpage data to point to /$username
+  - Remove /[t,f,fl]/(.*) handlers
+
+Pull scoreboard
+
+Merge all of the pages into a "Single Page App"
+
+Add Facebook Places support
+
+Add Gowalla support
+
+Add "friends" support:
+---
+  - Add in "list of known friends", "list of friends last updated", "list of approved friends" columns to ServiceAccount model
+  - Add in "retrieve list of friends" cron job per ServiceAccount
+  - Add in "reconcile list of friends" cron job per Account
+    - Include "notify user of new possible connection" email job
+      - Should that be a preference for user?
+  - Create "approve friend connection" page
+  - Add in "pull friends list" json data provider
+  - Add in "show friends" UI checkbox / js handler
+
+Add "trips" support:
+---
+  - Add "select section" handlebars in UI / js handler
+  - Add "make trip" UI button / js handler
+  - Create "Trip" model
+  - Add "make trip" server-side handler
+    - Returns trip ID?
+  - Add "list trips" to account page
+  - Create "delete trip" page
