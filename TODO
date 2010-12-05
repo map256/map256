@@ -6,7 +6,7 @@ Switch to nickname addressing:
 ---
   - DONE Move all appropriate URLs under /profile/*
   - DONE Add a "nickname" field to account
-  - Modify create user to assign a random nickname
+  - DONE Modify create user to assign a random nickname
     - Should have an exclude list ("help", "about", "static", "profile", "data", "faq", "kl", ...?)
   - Modify profile page to allow nickname to be updated
   - Add a "/{$nickname}" lookup that maps to user display

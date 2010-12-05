@@ -23,13 +23,15 @@
 # THE SOFTWARE.
 #
 
+import random
+
 from google.appengine.ext import db
 from google.appengine.ext.db import polymodel
 
 class Account(db.Model):
     google_user = db.UserProperty()
     created = db.DateTimeProperty(auto_now_add=True)
-    nickname = db.StringProperty()
+    nickname = db.StringProperty(default=str(random.randrange(1000000, 9999999)))
 
 class OauthRequest(db.Model):
     request_key = db.StringProperty()
