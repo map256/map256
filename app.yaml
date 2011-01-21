@@ -67,3 +67,8 @@ handlers:
 
 - url: /static
   static_dir: static
+
+############### DEFAULT ROUTE #################
+
+- url: /(.*)
+  script: app.py

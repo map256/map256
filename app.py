@@ -643,6 +643,13 @@ class UpdateNicknameHandler(webapp.RequestHandler):
 
         self.redirect('/profile')
 
+class NicknameHandler(webapp.RequestHandler):
+    def get(self, nickname=None):
+        if nickname is None:
+            self.response.out.write('no nickname')
+        else:
+            self.response.out.write(nickname)
+
 def main():
     routes = [
         ('/', FrontHandler),
@@ -662,7 +669,8 @@ def main():
         ('/t/(.*)', LookupHandler),
         ('/fl/(.*)', LookupHandler),
         ('/f/(.*)', LookupHandler),
-        ('/kl/(.*)', KeyLookupHandler)
+        ('/kl/(.*)', KeyLookupHandler),
+        ('/(.*)', NicknameHandler)
     ]
 
     application = webapp.WSGIApplication(routes, debug=True)
